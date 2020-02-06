@@ -10,7 +10,7 @@
 
 # Install Pillow and uncomment this line to access image processing.
 #from PIL import Image
-import numpy
+import numpy as np
 
 class Agent:
     # The default constructor for your Agent. Make sure to execute any
@@ -77,6 +77,10 @@ class Agent:
             raven_obj_answers.append(fig_dict)
         # ------------------------------------------------------------------------------------------------------------ #
 
+        sizes = ["huge", "very large", "large", "medium", "small"]
+        fill = ["yes", "no"]
+        shape = ["square", "circle", "cross", "plus", "right triangle", "pac-man", "octagon", "diamond", "heart"]
+
         for i in range(0, len(raven_obj_figures)):
             dict = raven_obj_figures[i]
             keys = list(dict.keys())
@@ -84,7 +88,7 @@ class Agent:
             for j in range(0, len(dict)):
                 obj = dict[keys[j]]
                 print(figure_keys[i], end=" ")
-                print(keys[j], end = " ")
+                print(keys[j], end=" ")
                 print(obj.attributes.values())
 
         return 0
@@ -93,6 +97,8 @@ class Agent:
         return 1
 
     class Frame:
+        levels = 1                                      # Used to identify the amount of shapes in the frame.
+
         def _init_(self, shape, fill, size, angle=None, inside=None):
             self.shape = shape
             self.fill = fill
