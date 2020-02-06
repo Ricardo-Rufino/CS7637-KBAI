@@ -47,6 +47,7 @@ def grade():
                         truth = int(fd2.read())
                         ans = answers[line0][line1]
                         results.write("%s,%d,%s,%d\n" % (line1, ans, outcome(truth, ans), truth))
+                        print("%s,%d,%s,%d" % (line1, ans, outcome(truth, ans), truth))
                         totals[outcome(truth, ans)] += 1
             setResults.write("%s,%d,%d,%d\n" % (line0, totals["Correct"], totals["Incorrect"], totals["Skipped"]))
 
