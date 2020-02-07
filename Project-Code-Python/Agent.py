@@ -9,8 +9,9 @@
 # These methods will be necessary for the project's main method to run.
 
 # Install Pillow and uncomment this line to access image processing.
-#from PIL import Image
+# from PIL import Image
 import numpy as np
+
 
 class Agent:
     # The default constructor for your Agent. Make sure to execute any
@@ -30,7 +31,7 @@ class Agent:
     #
     # Make sure to return your answer *as an integer* at the end of Solve().
     # Returning your answer as a string may cause your program to crash.
-    def Solve(self,problem):
+    def Solve(self, problem):
 
         # Creating frames for the problem
 
@@ -38,12 +39,13 @@ class Agent:
             if problem.problemType == "2x2":
                 return self.Solve_2x2(problem)
             else:
-                return self.Solve_3x3(problem)
+                return -1
         else:
             return -1
 
         return 2
 
+    # Method used to solve 2x2 methods.---------------------------------------------------------------------------------
     def Solve_2x2(self, problem):
         # Keys that will be used to access RavenFigure objects from RavensProblem objects.
         figure_keys = ["A", "B", "C"]
@@ -59,7 +61,6 @@ class Agent:
 
         # Collecting RavenFigure and RavenObject objects.---------------------------------------------------------------
         for i in range(0, len(figure_keys)):
-
             # Collecting RavenFigure objects.
             raven_fig_figures.append(problem.figures[figure_keys[i]])
 
@@ -68,7 +69,6 @@ class Agent:
             raven_obj_figures.append(fig_dict)
 
         for i in range(0, len(answer_keys)):
-
             # Collecting RavenFigure objects.
             raven_fig_answers.append(problem.figures[answer_keys[i]])
 
@@ -77,29 +77,66 @@ class Agent:
             raven_obj_answers.append(fig_dict)
         # ------------------------------------------------------------------------------------------------------------ #
 
-        sizes = ["huge", "very large", "large", "medium", "small"]
-        fill = ["yes", "no"]
-        shape = ["square", "circle", "cross", "plus", "right triangle", "pac-man", "octagon", "diamond", "heart"]
-
         for i in range(0, len(raven_obj_figures)):
             dict = raven_obj_figures[i]
             keys = list(dict.keys())
 
             for j in range(0, len(dict)):
                 obj = dict[keys[j]]
+                frame = self.frameCreator(keys[j], obj.attributes)
                 print(figure_keys[i], end=" ")
                 print(keys[j], end=" ")
-                print(obj.attributes.values())
+                frame.show()
 
         return 0
 
-    def Solve_3x3(self, problem):
-        return 1
+    # Function that creates a frame for a given figure in the raven problem.--------------------------------------------
+    def frameCreator(self, id, attributes):
+
+        values = list(attributes.values())  # Casting values to a list.
+
+        # Potential attributes of figure.
+        sizeType = ["huge", "very large", "large", "medium", "small"]
+        fillType = ["yes", "no"]
+        shapType = ["square", "circle", "cross", "plus", "right triangle", "pac-man", "octagon", "diamond", "heart"]
+
+        # Default values of attributes.
+        size, fill, shape, angle, inside = "", "", "", "", ""
+
+        for i in values:
+            if i in sizeType:
+                size = i
+            elif i in fillType:
+                fill = i
+            elif i in shapType:
+                shape = i
+            elif str.isdigit(i):
+                angle = int(i)
+            elif str.isalpha(i) and len(i) == 1:
+                inside = i
+
+        frame = None
+
+        if angle == "" and inside == "":
+            frame = self.Frame(id, shape, fill, size)
+        elif angle == "":
+            frame = self.Frame(id, shape, fill, size, inside=inside)
+        elif inside == "":
+            frame = self.Frame(id, shape, fill, size, angle=angle)
+        else:
+            frame = self.Frame(id, shape, fill, size, angle=angle, inside=inside)
+
+        return frame
+
+    # Function used to compare frames.----------------------------------------------------------------------------------
+    def compare(self, a, b):
+        return 0
 
     class Frame:
-        levels = 1                                      # Used to identify the amount of shapes in the frame.
+        levels = 1  # Used to identify the amount of shapes in the frame.
 
-        def _init_(self, shape, fill, size, angle=None, inside=None):
+        def __init__(self, id, shape, fill, size, angle=None, inside=None):
+            self.id = id
             self.shape = shape
             self.fill = fill
             self.size = size
@@ -108,3 +145,15 @@ class Agent:
                 self.angle = 0
             else:
                 self.angle = angle
+
+            if inside is None:
+                self.inside = "None"
+            else:
+                self.inside = inside
+
+        def show(self):
+            print("ID: %s, Shape: %s, Fill: %s, Size: %s, Angle: %d, Inside: %s" %
+                  (self.id, self.shape, self.fill, self.size, self.angle, self.inside))
+
+        def getID(self):
+            return self.id
