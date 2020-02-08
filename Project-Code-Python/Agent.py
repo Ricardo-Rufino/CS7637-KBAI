@@ -168,8 +168,13 @@ class Agent:
             second = b[0].getValues()
 
             for i in range(0, 5):
-                if first[i] != second[i]:
+                if first[i] != second[i] and i !=3:
                     transform[i] = 1
+                elif i == 3:                                # Special case when dealing with angles.
+                    first_angle = int(first[i])
+                    second_angle = int(second[i])
+                    transform[i] = np.absolute(first_angle-second_angle)
+
 
         return transform
 
