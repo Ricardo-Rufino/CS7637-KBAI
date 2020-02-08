@@ -178,7 +178,7 @@ class Agent:
         for i in range(0, len(list_answers)):
             if len(list_answers[i]) == 1 and len(c) == 1:
                 difference = self.FrameComparator(c, list_answers[i])
-                print(difference)
+                # print(difference)
                 if self.AreEqual(difference, transform):
                     return i + 1
 
