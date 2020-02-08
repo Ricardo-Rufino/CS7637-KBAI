@@ -59,6 +59,10 @@ class Agent:
         raven_obj_figures = []
         raven_obj_answers = []
 
+        # Lists that contains the frame of the figures and potential answers.
+        list_figure = []
+        list_answers = []
+
         # Collecting RavenFigure and RavenObject objects.---------------------------------------------------------------
         for i in range(0, len(figure_keys)):
             # Collecting RavenFigure objects.
@@ -80,13 +84,36 @@ class Agent:
         for i in range(0, len(raven_obj_figures)):
             dict = raven_obj_figures[i]
             keys = list(dict.keys())
+            list.sort(keys)
 
-            for j in range(0, len(dict)):
-                obj = dict[keys[j]]
-                frame = self.frameCreator(keys[j], obj.attributes)
-                print(figure_keys[i], end=" ")
-                print(keys[j], end=" ")
-                frame.show()
+            frame_ds = []
+            for key in keys:
+                frame_ds.append(self.frameCreator(key, dict[key].attributes))
+
+            # Arranging frames into their respective spot on the matrix.
+            list_figure.append(frame_ds)
+
+        for i in range(0, len(raven_obj_answers)):
+            dict = raven_obj_answers[i]
+            keys = list(dict.keys())
+            list.sort(keys)
+
+            frame_ds = []
+            for key in keys:
+                frame_ds.append(self.frameCreator(key, dict[key].attributes))
+
+            # Arranging frames into their respective spot on the matrix.
+            list_answers.append(frame_ds)
+
+        print("Figures:")
+        for i in list_figure:
+            for j in i:
+                j.show()
+
+        print("Answers:")
+        for i in list_answers:
+            for j in i:
+                j.show()
 
         return 0
 
@@ -98,7 +125,9 @@ class Agent:
         # Potential attributes of figure.
         sizeType = ["huge", "very large", "large", "medium", "small"]
         fillType = ["yes", "no"]
-        shapType = ["square", "circle", "cross", "plus", "right triangle", "pac-man", "octagon", "diamond", "heart"]
+        shapType = ["square", "circle", "cross", "plus", "right triangle",
+                    "pac-man", "octagon", "diamond", "heart", "pentagon",
+                    "triangle", "star"]
 
         # Default values of attributes.
         size, fill, shape, angle, inside = "", "", "", "", ""
@@ -112,7 +141,7 @@ class Agent:
                 shape = i
             elif str.isdigit(i):
                 angle = int(i)
-            elif str.isalpha(i) and len(i) == 1:
+            elif str.isalpha(i) or len(i.split(",")) > 1:
                 inside = i
 
         frame = None
@@ -129,7 +158,14 @@ class Agent:
         return frame
 
     # Function used to compare frames.----------------------------------------------------------------------------------
-    def compare(self, a, b):
+    def CompareFrame(self, a, b):
+
+        if len(a) == 1 and len(b) == 1:
+            return 0
+        else:
+            return -1
+
+    def AnswerSelector(self, c):
         return 0
 
     class Frame:
