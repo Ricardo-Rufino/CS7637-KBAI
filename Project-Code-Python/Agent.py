@@ -88,7 +88,7 @@ class Agent:
 
             frame_ds = []
             for key in keys:
-                frame_ds.append(self.frameCreator(key, dict[key].attributes))
+                frame_ds.append(self.FrameCreator(key, dict[key].attributes))
 
             # Arranging frames into their respective spot on the matrix.
             list_figure.append(frame_ds)
@@ -100,10 +100,18 @@ class Agent:
 
             frame_ds = []
             for key in keys:
-                frame_ds.append(self.frameCreator(key, dict[key].attributes))
+                frame_ds.append(self.FrameCreator(key, dict[key].attributes))
 
             # Arranging frames into their respective spot on the matrix.
             list_answers.append(frame_ds)
+
+        transform = self.FrameComparator(list_figure[0], list_figure[1])
+        print("Transformation: ")
+        print(transform)
+
+        answer = self.AnswerSelector(list_figure[2], list_answers, transform)
+        print("Answer: ")
+        print(answer)
 
         print("Figures:")
         for i in list_figure:
@@ -115,22 +123,24 @@ class Agent:
             for j in i:
                 j.show()
 
-        return 0
+        return answer
 
     # Function that creates a frame for a given figure in the raven problem.--------------------------------------------
-    def frameCreator(self, id, attributes):
+    def FrameCreator(self, id, attributes):
 
         values = list(attributes.values())  # Casting values to a list.
 
         # Potential attributes of figure.
         sizeType = ["huge", "very large", "large", "medium", "small"]
-        fillType = ["yes", "no"]
+        fillType = ["yes", "no", "left-half", "right-half", "top-half", "bottom-half"]
         shapType = ["square", "circle", "cross", "plus", "right triangle",
                     "pac-man", "octagon", "diamond", "heart", "pentagon",
                     "triangle", "star"]
+        aligType = ["bottom-right", "bottom-left", "top-right", "top-left"]
 
         # Default values of attributes.
-        size, fill, shape, angle, inside = "", "", "", "", ""
+        size, fill, shape = "", "", ""
+        angle, inside, alignment = None, None, None
 
         for i in values:
             if i in sizeType:
@@ -139,46 +149,68 @@ class Agent:
                 fill = i
             elif i in shapType:
                 shape = i
+            elif i in aligType:
+                alignment = i
             elif str.isdigit(i):
-                angle = int(i)
+                angle = i
             elif str.isalpha(i) or len(i.split(",")) > 1:
                 inside = i
 
-        frame = None
-
-        if angle == "" and inside == "":
-            frame = self.Frame(id, shape, fill, size)
-        elif angle == "":
-            frame = self.Frame(id, shape, fill, size, inside=inside)
-        elif inside == "":
-            frame = self.Frame(id, shape, fill, size, angle=angle)
-        else:
-            frame = self.Frame(id, shape, fill, size, angle=angle, inside=inside)
-
-        return frame
+        return self.Frame(id, shape, fill, size, angle=angle, inside=inside, alignment=alignment)
 
     # Function used to compare frames.----------------------------------------------------------------------------------
-    def CompareFrame(self, a, b):
+    def FrameComparator(self, a, b):
+
+        transform = np.zeros(5)                             # Transformation array; used to compare frames.
 
         if len(a) == 1 and len(b) == 1:
-            return 0
-        else:
-            return -1
+            first = a[0].getValues()
+            second = b[0].getValues()
 
-    def AnswerSelector(self, c):
-        return 0
+            for i in range(0, 5):
+                if first[i] != second[i]:
+                    transform[i] = 1
+
+        return transform
+
+    def AnswerSelector(self, c, list_answers, transform):
+
+        for i in range(0, len(list_answers)):
+            if len(list_answers[i]) == 1 and len(c) == 1:
+                difference = self.FrameComparator(c, list_answers[i])
+                print(difference)
+                if self.AreEqual(difference, transform):
+                    return i + 1
+
+        return -1
+
+    # Fucntion used to compare arrays.
+    def AreEqual(self, first, second):
+
+        counter = 0
+
+        for i in range(0, len(first)):
+            if first[i] != second[i]:
+                counter += 1
+
+        if counter == 0:
+            return True
+        else:
+            return False
+
 
     class Frame:
         levels = 1  # Used to identify the amount of shapes in the frame.
 
-        def __init__(self, id, shape, fill, size, angle=None, inside=None):
+        def __init__(self, id, shape, fill, size, angle=None, inside=None, alignment=None):
             self.id = id
             self.shape = shape
             self.fill = fill
             self.size = size
 
+            # Default values for angle, inside and alignment.
             if angle is None:
-                self.angle = 0
+                self.angle = "0"
             else:
                 self.angle = angle
 
@@ -187,9 +219,19 @@ class Agent:
             else:
                 self.inside = inside
 
+            if alignment is None:
+                self.alignment = "center"
+            else:
+                self.alignment = alignment
+
+
         def show(self):
-            print("ID: %s, Shape: %s, Fill: %s, Size: %s, Angle: %d, Inside: %s" %
-                  (self.id, self.shape, self.fill, self.size, self.angle, self.inside))
+            print("ID: %s, Shape: %s, Fill: %s, Size: %s, Angle: %s, Inside: %s Alignment: %s" %
+                  (self.id, self.shape, self.fill, self.size, self.angle, self.inside, self.alignment))
 
         def getID(self):
             return self.id
+
+        def getValues(self):
+            values = np.array([self.shape, self.fill, self.size, self.angle, self.alignment])
+            return values
