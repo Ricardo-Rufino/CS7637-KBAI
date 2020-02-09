@@ -161,27 +161,32 @@ class Agent:
     # Function used to compare frames.----------------------------------------------------------------------------------
     def FrameComparator(self, a, b):
 
-        transform = np.zeros(5)                             # Transformation array; used to compare frames.
+        transform = np.zeros((5, 1))
 
-        if len(a) == 1 and len(b) == 1:
-            first = a[0].getValues()
-            second = b[0].getValues()
+        if (len(a) < 3 and len(b) < 3) and (len(a) == len(b)):
 
-            for i in range(0, 5):
-                if first[i] != second[i] and i !=3:
-                    transform[i] = 1
-                elif i == 3:                                # Special case when dealing with angles.
-                    first_angle = int(first[i])
-                    second_angle = int(second[i])
-                    transform[i] = np.absolute(first_angle-second_angle)
+            transform = np.zeros((5, len(a)))               # Transformation array; used to compare frames.
 
+            for j in range(0, len(a)):
+
+                first = a[j].getValues()
+                second = b[j].getValues()
+
+                for i in range(0, 5):
+
+                    if first[i] != second[i] and i != 3:
+                        transform[i][j] = 1
+                    elif i == 3:                            # Special case when dealing with angles.
+                        first_angle = int(first[i])
+                        second_angle = int(second[i])
+                        transform[i][j] = np.absolute(first_angle-second_angle)
 
         return transform
 
     def AnswerSelector(self, c, list_answers, transform):
 
         for i in range(0, len(list_answers)):
-            if len(list_answers[i]) == 1 and len(c) == 1:
+            if (len(list_answers[i]) < 3 and len(c) < 3) and len(list_answers[i]) == len(c):
                 difference = self.FrameComparator(c, list_answers[i])
                 # print(difference)
                 if self.AreEqual(difference, transform):
@@ -194,9 +199,13 @@ class Agent:
 
         counter = 0
 
-        for i in range(0, len(first)):
-            if first[i] != second[i]:
-                counter += 1
+        if (first.size == second.size):
+            row, col = first.shape
+
+            for i in range(0, row):
+                for j in range(0, col):
+                    if first[i][j] != second[i][j]:
+                        counter += 1
 
         if counter == 0:
             return True
