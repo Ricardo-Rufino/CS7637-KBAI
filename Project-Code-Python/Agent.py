@@ -20,7 +20,25 @@ class Agent:
     # Do not add any variables to this signature; they will not be used by
     # main().
     def __init__(self):
-        pass
+        self.position = {
+            "center": [0, 0],
+            "bottom-right": [1, -1],
+            "bottom-left": [-1, -1],
+            "top-right": [1, 1],
+            "top-left": [-1, 1]
+        }
+
+        self.value = {}
+        self.counter = 1
+        for i in np.arange(-2, 3):
+            for j in np.arange(-2, 3):
+
+                key = str(i) + " " + str(j)
+                if i == 0 and j == 0:
+                    self.value[key] = 0
+                else:
+                    self.value[key] = self.counter
+                    self.counter += 1
 
     # The primary method for solving incoming Raven's Progressive Matrices.
     # For each problem, your Agent's Solve() method will be called. At the
@@ -161,25 +179,38 @@ class Agent:
     # Function used to compare frames.----------------------------------------------------------------------------------
     def FrameComparator(self, a, b):
 
-        transform = np.zeros((5, 1))
+        transform = np.zeros((6, 1))
 
         if (len(a) < 3 and len(b) < 3) and (len(a) == len(b)):
 
-            transform = np.zeros((5, len(a)))               # Transformation array; used to compare frames.
+            transform = np.zeros((6, len(a)))                       # Transformation array; used to compare frames.
 
             for j in range(0, len(a)):
-
                 first = a[j].getValues()
                 second = b[j].getValues()
 
                 for i in range(0, 5):
-
-                    if first[i] != second[i] and i != 3:
+                    if first[i] != second[i] and i != 3 and i != 4:
                         transform[i][j] = 1
-                    elif i == 3:                            # Special case when dealing with angles.
+                    elif i == 3 and first[0] == second[0]:          # Special case when dealing with angles.
                         first_angle = int(first[i])
                         second_angle = int(second[i])
                         transform[i][j] = np.absolute(first_angle-second_angle)
+                    elif i == 4:
+                        transform[i][j] = self.AlignmentHash(first[i], second[i], self.position, self.value)
+
+                transform[5][j] = 0
+
+        else:
+            if len(a) > len(b):
+                transform = np.zeros((6, len(a)))
+            else:
+                transform = np.zeros((6, len(b)))
+
+            row, col = transform.shape
+
+            for j in range(0, col):
+                transform[5, j] = len(b) - len(a)
 
         return transform
 
@@ -212,6 +243,18 @@ class Agent:
         else:
             return False
 
+    # Function used for hashing alignment combinations.
+    def AlignmentHash(self, first, second, position, value):
+
+        first_pos = position[first]
+        second_pos = position[second]
+
+        final_x = second_pos[0] - first_pos[0]
+        final_y = second_pos[1] - first_pos[1]
+
+        final_key = str(final_x) + " " + str(final_y)
+
+        return value[final_key]
 
     class Frame:
         levels = 1  # Used to identify the amount of shapes in the frame.
