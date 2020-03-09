@@ -11,6 +11,7 @@
 # Install Pillow and uncomment this line to access image processing.
 # from PIL import Image
 import numpy as np
+from Frame import Frame
 
 
 class Agent:
@@ -20,6 +21,8 @@ class Agent:
     # Do not add any variables to this signature; they will not be used by
     # main().
     def __init__(self):
+
+        # Dictionary used to map location to coordinate.
         self.position = {
             "center": [0, 0],
             "bottom-right": [1, -1],
@@ -55,16 +58,18 @@ class Agent:
 
         if problem.hasVerbal:
             if problem.problemType == "2x2":
-                return self.Solve_2x2(problem)
+                return self.solve_2x2(problem)
+            elif problem.problemType == "3x3":
+                return self.solve_3x3(problem)
             else:
-                return -1
+                return -10
         else:
             return -1
 
         return 2
 
     # Method used to solve 2x2 methods.---------------------------------------------------------------------------------
-    def Solve_2x2(self, problem):
+    def solve_2x2(self, problem):
         # Keys that will be used to access RavenFigure objects from RavensProblem objects.
         figure_keys = ["A", "B", "C"]
         answer_keys = ["1", "2", "3", "4", "5", "6"]
@@ -106,7 +111,7 @@ class Agent:
 
             frame_ds = []
             for key in keys:
-                frame_ds.append(self.FrameCreator(key, dict[key].attributes))
+                frame_ds.append(self.frame_creator(key, dict[key].attributes))
 
             # Arranging frames into their respective spot on the matrix.
             list_figure.append(frame_ds)
@@ -118,33 +123,73 @@ class Agent:
 
             frame_ds = []
             for key in keys:
-                frame_ds.append(self.FrameCreator(key, dict[key].attributes))
+                frame_ds.append(self.frame_creator(key, dict[key].attributes))
 
             # Arranging frames into their respective spot on the matrix.
             list_answers.append(frame_ds)
 
-        transform = self.FrameComparator(list_figure[0], list_figure[1])
-        print("Transformation: ")
-        print(transform)
+        transform = self.frame_comparator(list_figure[0], list_figure[1])
+        # print("Transformation: ")
+        # print(transform)
 
-        answer = self.AnswerSelector(list_figure[2], list_answers, transform)
-        print("Answer: ")
-        print(answer)
+        answer = self.answer_selector(list_figure[2], list_answers, transform)
+        # print("Answer: ")
+        # print(answer)
 
-        print("Figures:")
-        for i in list_figure:
-            for j in i:
-                j.show()
-
-        print("Answers:")
-        for i in list_answers:
-            for j in i:
-                j.show()
+        # print("Figures:")
+        # for i in list_figure:
+        #     for j in i:
+        #         j.show()
+        #
+        # print("Answers:")
+        # for i in list_answers:
+        #     for j in i:
+        #         j.show()
 
         return answer
 
+    def solve_3x3(self, problem):
+        # Keys that will be used to access RavenFigure objects from RavensProblem objects.
+        figure_keys = ["A", "B", "C", "D", "E", "F", "G", "H"]
+        answer_keys = ["1", "2", "3", "4", "5", "6", "7", "8"]
+
+        # Lists that will be used to stored the RavenFigure objects.
+        raven_fig_figures = []
+        raven_fig_answers = []
+
+        # Lists that will be used to store the RavenObject objects.
+        raven_obj_figures = []
+        raven_obj_answers = []
+
+        # Lists that contains the frame of the figures and potential answers.
+        list_figure = []
+        list_answers = []
+
+        # Collecting RavenFigure and RavenObject objects.---------------------------------------------------------------
+        for i in range(0, len(figure_keys)):
+            # Collecting RavenFigure objects.
+            raven_fig_figures.append(problem.figures[figure_keys[i]])
+
+            # Collecting dictionary that contain RavenObjects.
+            fig_dict = raven_fig_figures[i].objects
+            raven_obj_figures.append(fig_dict)
+
+        for i in range(0, len(answer_keys)):
+            # Collecting RavenFigure objects.
+            raven_fig_answers.append(problem.figures[answer_keys[i]])
+
+            # Collecting dictionary that contain RavenObjects.
+            fig_dict = raven_fig_answers[i].objects
+            raven_obj_answers.append(fig_dict)
+
+        return -30
+
+# -------------------------------------------------------------------------------------------------------------------- #
+#                                                  Helper Functions                                                    #
+# -------------------------------------------------------------------------------------------------------------------- #
+
     # Function that creates a frame for a given figure in the raven problem.--------------------------------------------
-    def FrameCreator(self, id, attributes):
+    def frame_creator(self, id, attributes):
 
         values = list(attributes.values())  # Casting values to a list.
 
@@ -174,10 +219,10 @@ class Agent:
             elif str.isalpha(i) or len(i.split(",")) > 1:
                 inside = i
 
-        return self.Frame(id, shape, fill, size, angle=angle, inside=inside, alignment=alignment)
+        return Frame(id, shape, fill, size, angle=angle, inside=inside, alignment=alignment)
 
     # Function used to compare frames.----------------------------------------------------------------------------------
-    def FrameComparator(self, a, b):
+    def frame_comparator(self, a, b):
 
         transform = np.zeros((6, 1))
 
@@ -197,7 +242,7 @@ class Agent:
                         second_angle = int(second[i])
                         transform[i][j] = np.absolute(first_angle-second_angle)
                     elif i == 4:
-                        transform[i][j] = self.AlignmentHash(first[i], second[i], self.position, self.value)
+                        transform[i][j] = self.alignment_hash(first[i], second[i], self.position, self.value)
 
                 transform[5][j] = 0
 
@@ -214,19 +259,22 @@ class Agent:
 
         return transform
 
-    def AnswerSelector(self, c, list_answers, transform):
+    def answer_selector(self, c, list_answers, transform):
 
         for i in range(0, len(list_answers)):
             if (len(list_answers[i]) < 3 and len(c) < 3) and len(list_answers[i]) == len(c):
-                difference = self.FrameComparator(c, list_answers[i])
+                difference = self.frame_comparator(c, list_answers[i])
                 # print(difference)
-                if self.AreEqual(difference, transform):
+                if self.are_equal(difference, transform):
                     return i + 1
 
         return -1
 
-    # Fucntion used to compare arrays.
-    def AreEqual(self, first, second):
+    # Function used to compare matrices.
+    # @first:       (matrix)    first matrix.
+    # @second:      (matrix)    second matrix.
+    # @return:      (boolean)   true if matrices are the same; false if they're not.
+    def are_equal(self, first, second):
 
         counter = 0
 
@@ -244,7 +292,12 @@ class Agent:
             return False
 
     # Function used for hashing alignment combinations.
-    def AlignmentHash(self, first, second, position, value):
+    # @first:       (string)        string corresponding to the initial alignment of the figure.
+    # @second:      (string)        string corresponding to the final alignment of the figure.
+    # @position:    (dictionary)    maps alignment (string) to a list of two elements (x, y coordinates).
+    # @value:       (dictionary)    maps directional vector (string) to a unique number.
+    # @return:      (int)           unique number that corresponds to a unique directional vector.
+    def alignment_hash(self, first, second, position, value):
 
         first_pos = position[first]
         second_pos = position[second]
@@ -256,39 +309,3 @@ class Agent:
 
         return value[final_key]
 
-    class Frame:
-        levels = 1  # Used to identify the amount of shapes in the frame.
-
-        def __init__(self, id, shape, fill, size, angle=None, inside=None, alignment=None):
-            self.id = id
-            self.shape = shape
-            self.fill = fill
-            self.size = size
-
-            # Default values for angle, inside and alignment.
-            if angle is None:
-                self.angle = "0"
-            else:
-                self.angle = angle
-
-            if inside is None:
-                self.inside = "None"
-            else:
-                self.inside = inside
-
-            if alignment is None:
-                self.alignment = "center"
-            else:
-                self.alignment = alignment
-
-
-        def show(self):
-            print("ID: %s, Shape: %s, Fill: %s, Size: %s, Angle: %s, Inside: %s Alignment: %s" %
-                  (self.id, self.shape, self.fill, self.size, self.angle, self.inside, self.alignment))
-
-        def getID(self):
-            return self.id
-
-        def getValues(self):
-            values = np.array([self.shape, self.fill, self.size, self.angle, self.alignment])
-            return values
