@@ -188,7 +188,10 @@ class Agent:
 #                                                  Helper Functions                                                    #
 # -------------------------------------------------------------------------------------------------------------------- #
 
-    # Function that creates a frame for a given figure in the raven problem.--------------------------------------------
+    # Function that creates a frame for a given figure in the raven problem.
+    # @id:          (character)     id of the frame (i.e. 'a').
+    # @attributes:  (dictionary)    maps keys (such as size, filled) to their respective values.
+    # @return:      (Frame)         Frame with the corresponding attributes of the figure.
     def frame_creator(self, id, attributes):
 
         values = list(attributes.values())  # Casting values to a list.
@@ -221,7 +224,10 @@ class Agent:
 
         return Frame(id, shape, fill, size, angle=angle, inside=inside, alignment=alignment)
 
-    # Function used to compare frames.----------------------------------------------------------------------------------
+    # Function used to compare frames.
+    # @a:       (matrix)    first matrix.
+    # @b:       (matrix)    second matrix.
+    # @return:  (matrix)    matrix that details the difference between a and b.
     def frame_comparator(self, a, b):
 
         transform = np.zeros((6, 1))
