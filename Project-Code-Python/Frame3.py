@@ -23,8 +23,8 @@ class Frame3:
         self.overlaps = ""
         self.angle = "0"
 
-        # Variable used to construct image matrix.
-        self.coordinate = "0,0"
+        # Default coordinates; assuming 3x3 figure position matrix.
+        self.coordinate = "1,1"
 
         # All possible keys that attributes dictionary may use.
         self.keys = ["fill", "height", "shape", "size", "width",
@@ -60,15 +60,33 @@ class Frame3:
             except:
                 pass
 
+        # Default coordinate values assuming 3x3 figure position matrix.
+        x = 0   # Default x-value of coordinate.
+        y = 0   # Default y-value of coordinate.
+
+        "**************************************************************************************************************"
+        "                                              NEEDS COMPLETION                                                "
+        "**************************************************************************************************************"
         # Setting up coordinate value for frame.
         if self.left_of != "":
             pass
         if self.above != "":
             pass
 
-
+    # Returns list of strings with each element containing the value of the figure's attributes.
+    # @return:      (list<string>)      values of figure's attributes.
     def list_representation(self):
         return [self.id, self.fill, self.height, self.shape, self.shape, self.size, self.width,
                 self.above, self.inside, self.left_of, self.overlaps, self.angle,
                 self.coordinate]
+
+    # Returns list representation of coordinate.
+    # @return:  (list<int>)     first element is x-coordinate, second element in y-coordinate.
+    def get_coordinate(self):
+        coordinates = self.coordinate.split(",")
+
+        x = int(coordinates[0])
+        y = int(coordinates[1])
+
+        return [x, y]
 
