@@ -10,17 +10,17 @@ class Frame3:
         self.attributes = attributes
 
         # Attributes corresponding to "physical" characteristics of figure.
-        self.fill = ""
-        self.height = ""
-        self.shape = ""
-        self.size = ""
-        self.width = ""
+        self.fill = "n/a"
+        self.height = "n/a"
+        self.shape = "n/a"
+        self.size = "n/a"
+        self.width = "n/a"
 
         # Attributes corresponding to figure's relative position.
-        self.above = ""
-        self.inside = ""
-        self.left_of = ""
-        self.overlaps = ""
+        self.above = "n/a"
+        self.inside = "n/a"
+        self.left_of = "n/a"
+        self.overlaps = "n/a"
         self.angle = "0"
 
         # Default coordinates; assuming 3x3 figure position matrix.
@@ -31,6 +31,10 @@ class Frame3:
                      "above", "inside", "left_of", "overlaps",
                      "angle"]
 
+        # Generating frame's values.
+        self.frame_creator()
+
+    # Generates the values of the figure's frame values.
     def frame_creator(self):
         for key in self.keys:
             try:
@@ -45,7 +49,7 @@ class Frame3:
                 elif key == "size":
                     self.size = value
                 elif key == "width":
-                    self.size = value
+                    self.width = value
 
                 elif key == "above":
                     self.above = value
@@ -61,22 +65,22 @@ class Frame3:
                 pass
 
         # Default coordinate values assuming 3x3 figure position matrix.
-        x = 0   # Default x-value of coordinate.
-        y = 0   # Default y-value of coordinate.
+        x = 1   # Default x-value of coordinate.
+        y = 1   # Default y-value of coordinate.
 
         "**************************************************************************************************************"
         "                                              NEEDS COMPLETION                                                "
         "**************************************************************************************************************"
         # Setting up coordinate value for frame.
-        if self.left_of != "":
+        if self.left_of != "n/a":
             pass
-        if self.above != "":
+        if self.above != "n/a":
             pass
 
     # Returns list of strings with each element containing the value of the figure's attributes.
     # @return:      (list<string>)      values of figure's attributes.
     def list_representation(self):
-        return [self.id, self.fill, self.height, self.shape, self.shape, self.size, self.width,
+        return [self.id, self.fill, self.height, self.shape, self.size, self.width,
                 self.above, self.inside, self.left_of, self.overlaps, self.angle,
                 self.coordinate]
 
@@ -89,4 +93,13 @@ class Frame3:
         y = int(coordinates[1])
 
         return [x, y]
+
+    # Prints all attributes of the figure's frame.
+    def show(self):
+        print("ID: %s, Fill: %s, Height: %s, Shape: %s, Size: %s, Width: %s, "
+              "Above: %s, Inside: %s, Left-Of: %s, Overlaps: %s, Angle: %s, "
+              "Coordinate: %s" %
+              (self.id, self.fill, self.height, self.shape, self.size, self.width,
+               self.above, self.inside, self.left_of, self.overlaps, self.angle,
+               self.coordinate))
 

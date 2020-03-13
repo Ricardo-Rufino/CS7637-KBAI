@@ -15,6 +15,10 @@ class FigureMatrix:
         x = figure_frame.get_coordinate()[0]
         y = figure_frame.get_coordinate()[1]
 
+        "**************************************************************************************************************"
+        "           MAY HAVE TO TAKE INTO ACCOUNT INSIDE FIELD OF FIGURE'S FRAME TO DETERMINE LIST POSITION            "
+        "**************************************************************************************************************"
+
         self.matrix[x][y].append(figure_frame)
 
 

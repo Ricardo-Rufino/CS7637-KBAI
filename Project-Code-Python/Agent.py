@@ -12,6 +12,7 @@
 # from PIL import Image
 import numpy as np
 from Frame import Frame
+from Solver3x3 import Solver3x3
 
 
 class Agent:
@@ -60,7 +61,8 @@ class Agent:
             if problem.problemType == "2x2":
                 return self.solve_2x2(problem)
             elif problem.problemType == "3x3":
-                return self.solve_3x3(problem)
+                solver = Solver3x3(problem)
+                return -30
             else:
                 return -10
         else:
