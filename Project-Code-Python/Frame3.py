@@ -5,7 +5,8 @@ class Frame3:
     # Constructor of class.
     # @id:          (character)     id of frame (i.e. 'a').
     # @attributes:  (dictionary)    contains attributes of the figure (i.e. size, fill, etc.).
-    def __init__(self, id, attributes):
+    def __init__(self, figure, id, attributes):
+        self.figure = figure
         self.id = str(id)
         self.attributes = attributes
 
@@ -80,7 +81,7 @@ class Frame3:
     # Returns list of strings with each element containing the value of the figure's attributes.
     # @return:      (list<string>)      values of figure's attributes.
     def list_representation(self):
-        return [self.id, self.fill, self.height, self.shape, self.size, self.width,
+        return [self.figure, self.id, self.fill, self.height, self.shape, self.size, self.width,
                 self.above, self.inside, self.left_of, self.overlaps, self.angle,
                 self.coordinate]
 
@@ -96,10 +97,10 @@ class Frame3:
 
     # Prints all attributes of the figure's frame.
     def show(self):
-        print("ID: %s, Fill: %s, Height: %s, Shape: %s, Size: %s, Width: %s, "
+        print("Figure: %s, ID: %s, Fill: %s, Height: %s, Shape: %s, Size: %s, Width: %s, "
               "Above: %s, Inside: %s, Left-Of: %s, Overlaps: %s, Angle: %s, "
               "Coordinate: %s" %
-              (self.id, self.fill, self.height, self.shape, self.size, self.width,
+              (self.figure, self.id, self.fill, self.height, self.shape, self.size, self.width,
                self.above, self.inside, self.left_of, self.overlaps, self.angle,
                self.coordinate))
 

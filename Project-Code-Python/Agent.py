@@ -62,7 +62,7 @@ class Agent:
                 return self.solve_2x2(problem)
             elif problem.problemType == "3x3":
                 solver = Solver3x3(problem)
-                return -30
+                return solver.answer()
             else:
                 return -10
         else:
