@@ -21,17 +21,6 @@ class FigureMatrix:
 
         self.matrix[x][y].append(figure_frame)
 
-    def map(self):
-        map = np.zeros((3, 3))
-        row, col = map.shape
-
-        for i in range(0, row):
-            for j in range(0, col):
-                if len(self.matrix[row][col]) != 0:
-                    map[row][col] = 1
-
-        print(map)
-
     def show(self):
         print(self.matrix)
 

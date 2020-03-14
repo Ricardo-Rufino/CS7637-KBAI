@@ -6,6 +6,7 @@ from FigureMatrix import FigureMatrix
 
 class Solver3x3:
     def __init__(self, problem):
+        self.answer = -30
         self.problem = problem
 
         # Keys that will be used to access RavenFigure objects from RavensProblem objects.
@@ -69,6 +70,8 @@ class Solver3x3:
                 frame.show()
                 frames.append(frame)
 
+            # Reversing list so it displays frames from inside out.
+            frames.reverse()
             self.list_figure.append(frames)
 
         print("")
@@ -85,16 +88,69 @@ class Solver3x3:
                 frame.show()
                 frames.append(frame)
 
+            # Reversing list so it displays frames from inside out.
+            frames.reverse()
             self.list_answers.append(frames)
 
         # ------------------------------------------------------------------------------------------------------------ #
         #                                          Creating FigureMatrices                                             #
         # ------------------------------------------------------------------------------------------------------------ #
-
+        figure_matrix_fig = []
+        figure_matrix_ans = []
         for frames in self.list_figure:
-            self.figure_matrix_creator(frames)
+            figure_matrix_fig.append(self.figure_matrix_creator(frames))
+        for frames in self.list_answers:
+            figure_matrix_ans.append(self.figure_matrix_creator(frames))
 
+        # ------------------------------------------------------------------------------------------------------------ #
+        #                            Creating Transformation Matrices and Selecting Answer                             #
+        # ------------------------------------------------------------------------------------------------------------ #
 
+        # Used to gathered known data.
+        figure11 = figure_matrix_fig[0]                             # Row 1: 1st figure.
+        figure12 = figure_matrix_fig[1]                             # Row 1: 2nd horizontal figure.
+        figure13 = figure_matrix_fig[2]                             # Row 1: 3rd horizontal figure.
+        figure21 = figure_matrix_fig[3]                             # Col 1: 2nd vertical figure.
+        figure31 = figure_matrix_fig[6]                             # Col 1: 3rd vertical figure.
+
+        # Partial information needed to find the answer.
+        figure32 = figure_matrix_fig[7]                             # Row 3: 2nd horizontal figure.
+        figure23 = figure_matrix_fig[5]                             # Col 3: 2nd vertical figure.
+
+        # Transformation Matrices of known figures.
+        tr_h1 = self.transformation(figure11, figure12)             # 1st horizontal transformation matrix.
+        tr_h2 = self.transformation(figure12, figure13)             # 2nd horizontal transformation matrix.
+        tr_v1 = self.transformation(figure11, figure21)             # 1st vertical transformation matrix.
+        tr_v2 = self.transformation(figure21, figure31)             # 2nd vertical transformation matrix.
+
+        tr_h = [tr_h1, tr_h2]
+        tr_v = [tr_v1, tr_v2]
+
+        # Transformation Matrices used to find the answer.
+        tr_h3 = self.transformation(figure31, figure32)
+        tr_v3 = self.transformation(figure13, figure23)
+
+        an_h = [tr_h3]
+        an_v = [tr_v3]
+
+        print("\nTransformation Matrices:")
+        print(tr_h1, end="\n\n")
+        print(tr_h2, end="\n\n")
+        print(tr_v1, end="\n\n")
+        print(tr_v2, end="\n\n")
+
+        print("\nPartial Answer Matrices:")
+        print(tr_h3, end="\n\n")
+        print(tr_v3, end="\n\n")
+
+        # ------------------------------------------------------------------------------------------------------------ #
+        #                                        Searching for the Answer                                              #
+        # ------------------------------------------------------------------------------------------------------------ #
+
+        self.answer_selector(tr_h, tr_v, an_h, an_v, figure32, figure23, figure_matrix_ans)
+# -------------------------------------------------------------------------------------------------------------------- #
+#                                                  Helper Methods                                                      #
+# -------------------------------------------------------------------------------------------------------------------- #
 
     # Creates figure matrix for a given figure in the raven's problem.
     # @frame_list       (list<Frame3>)      list containing the frames of the given figure.
@@ -109,8 +165,117 @@ class Solver3x3:
 
         return matrix
 
-    def raven_matrix_creator(self, figure_list):
-        return -30
+    # Compares two matrices for differences and returns a "transformation" matrix that details the differences between
+    # the two matrices.
+    # @mfm1:        (FigureMatrix)      first matrix to compare.
+    # @mfm2:        (FigureMatrix)      second matrix to compare.
+    # @return:      (2D List)           "transformation" matrix.
+    def transformation(self, fm1, fm2):
+        transformation_matrix = [
+            [[], [], []],
+            [[], [], []],
+            [[], [], []]
+        ]
 
-    def answer(self):
-        return -30
+        matrix1 = fm1.matrix
+        matrix2 = fm2.matrix
+
+        for row in range(0, 3):
+            for col in range(0, 3):
+
+                # Transformation array used to keep track of changes between frames.
+                tr_array = np.zeros((12, 1))
+
+                for list in range(0, len(matrix1[row][col])):
+                    if matrix2[row][col] is None:
+                        break
+                    else:
+                        try:
+                            first = matrix1[row][col][list].get_values()
+                            second = matrix2[row][col][list].get_values()
+
+                            for i in range(0, len(tr_array)-1):
+
+                                # Comparing frame elements.
+                                if first[i] != second[i] and i != 6 & i != 9:
+                                    tr_array[i] += 1
+
+                                # Comparing how many figures the object is inside.
+                                elif i == 6:
+                                    inside1 = first[i].split(",")
+                                    inside2 = second[i].split(",")
+
+                                    if inside1[0] == "n/a" and inside2[0] != "n/a":
+                                        tr_array[i] += 1
+                                    elif inside1[0] != "n/a" and inside2[0] == "n/a":
+                                        tr_array[i] += 1
+                                    elif len(inside1) != len(inside2):
+                                        tr_array[i] += 1
+
+                                # Comparing frame angle changes.
+                                elif i == 9:
+                                    first_angle = int(first[i])
+                                    second_angle = int(second[i])
+                                    tr_array[i] = np.absolute(first_angle - second_angle)
+                        except:
+                            pass
+
+                        "**********************************************************************************************"
+                        "                           NEED TO IMPLEMENT COORDINATE COMPARISON                            "
+                        "**********************************************************************************************"
+
+                    # Last element of transformation array details increases/decreases in objects in figures.
+                    tr_array[-1] = len(matrix2[row][col]) - len(matrix1[row][col])
+
+                    # Adding transformation array into transformation matrix.
+                    transformation_matrix[row][col] = tr_array
+
+        return transformation_matrix
+
+    # Selects the answer to the raven's problems by utilizing the tranformation matrices found from the first row and
+    # first column of the problem.
+    # @tr_h:        (list<Numpy.Matrix>)        transformation matrices of the first row of the problem.
+    # @tr_v:        (list<Numpy.Matrix>)        transformation matrices of the first column of the problem.
+    # @an_h:        (list<Numpy.Matrix>)        partial transformation list of last row of the problem.
+    # @an_v:        (list<Numpy.Matrix>)        partial transformation list of last column of the prolbem.
+    def answer_selector(self, tr_h, tr_v, an_h, an_v, figure32, figure23, an_list):
+        for i in range(0, len(an_list)):
+            ans_matrix = an_list[i]
+
+            tr_h4 = self.transformation(figure32, ans_matrix)
+            tr_v4 = self.transformation(figure23, ans_matrix)
+
+            an_h.append(tr_h4)
+            an_v.append(tr_v4)
+
+            if self.transformation_comparator(tr_h, an_h) and self.transformation_comparator(tr_v, an_v):
+                self.answer = i + 1
+                break
+            else:
+                an_h.pop(-1)
+                an_v.pop(-1)
+
+    # Helper method that compares lists of transformation matrices.
+    # @tr_list1:    (List<2D List>)     first list.
+    # @tr_list2:    (List<2D List>)     second list.
+    # @return:      (boolean)           true if lists are the same; false if they're not.
+    def transformation_comparator(self, tr_list1, tr_list2):
+        counter = 0
+
+        for i in range(0, 2):
+            tr1 = tr_list1[i]
+            tr2 = tr_list2[i]
+
+            for row in range(0, 3):
+                for col in range(0, 3):
+                    array1 = tr1[row][col]
+                    array2 = tr2[row][col]
+
+                    if len(array1) == 0 and len(array2) == 0:
+                        continue
+
+                    for k in range(0, len(array1)):
+                        if array1[k] != array2[k]:
+                            return False
+
+        return True

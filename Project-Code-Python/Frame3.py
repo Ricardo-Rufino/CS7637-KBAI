@@ -80,8 +80,8 @@ class Frame3:
 
     # Returns list of strings with each element containing the value of the figure's attributes.
     # @return:      (list<string>)      values of figure's attributes.
-    def list_representation(self):
-        return [self.figure, self.id, self.fill, self.height, self.shape, self.size, self.width,
+    def get_values(self):
+        return [self.fill, self.height, self.shape, self.size, self.width,
                 self.above, self.inside, self.left_of, self.overlaps, self.angle,
                 self.coordinate]
 
