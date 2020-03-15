@@ -32,6 +32,15 @@ class Agent:
             "top-left": [-1, 1]
         }
 
+        self.size_dictionary = {
+            "n/a": -1,
+            "small": 0,
+            "medium": 1,
+            "large": 2,
+            "very large": 3,
+            "huge": 4
+        }
+
         self.value = {}
         self.counter = 1
         for i in np.arange(-2, 3):
@@ -61,7 +70,7 @@ class Agent:
             if problem.problemType == "2x2":
                 return self.solve_2x2(problem)
             elif problem.problemType == "3x3":
-                solver = Solver3x3(problem)
+                solver = Solver3x3(problem, self.size_dictionary)
                 return solver.answer
             else:
                 return -10

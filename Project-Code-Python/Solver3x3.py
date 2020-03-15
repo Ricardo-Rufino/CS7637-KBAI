@@ -5,9 +5,10 @@ from FigureMatrix import FigureMatrix
 
 
 class Solver3x3:
-    def __init__(self, problem):
+    def __init__(self, problem, size_dictionary):
         self.answer = -30
         self.problem = problem
+        self.size_dictionary = size_dictionary
 
         # Keys that will be used to access RavenFigure objects from RavensProblem objects.
         self.figure_keys = ["A", "B", "C", "D", "E", "F", "G", "H"]
@@ -196,9 +197,53 @@ class Solver3x3:
 
                             for i in range(0, len(tr_array)-1):
 
-                                # Comparing frame elements.
-                                if first[i] != second[i] and i != 6 & i != 9:
-                                    tr_array[i] += 1
+                                # # Comparing frame elements.
+                                # if first[i] != second[i] and i != 1 and i != 3 and i != 4 and i != 6 & i != 9:
+                                #     tr_array[i] += 1
+
+                                # Comparing width or height.
+                                if i == 1 or i == 4:
+                                    if first[i] == "n/a" and second[i] == "n/a":
+                                        continue
+
+                                    if first[i] == "n/a":
+                                        size1 = self.size_dictionary[first[3]]
+                                    else:
+                                        size1 = self.size_dictionary[first[i]]
+
+                                    if second[i] == "n/a":
+                                        size2 = self.size_dictionary[second[3]]
+                                    else:
+                                        size2 = self.size_dictionary[second[i]]
+
+                                    if size1 > size2:
+                                        tr_array[i] -= 1
+                                    elif size1 < size2:
+                                        tr_array[i] += 1
+
+                                # Comparing shapes.
+                                elif i == 2:
+                                    # Making expection for rectangle and square.
+                                    if first[i] == "square" and second[i] == "rectangle":
+                                        continue
+                                    elif first[i] == "rectangle" and second[i] == "square":
+                                        continue
+                                    else:
+                                        if first[i] != second[i]:
+                                            tr_array[i] += 1
+
+                                # Comparing sizes.
+                                elif i == 3:
+                                    if first[i] == "n/a" or second[i] == "n/a":
+                                        continue
+
+                                    size1 = self.size_dictionary[first[i]]
+                                    size2 = self.size_dictionary[second[i]]
+
+                                    if size1 > size2:
+                                        tr_array[i] -= 1
+                                    elif size1 < size2:
+                                        tr_array[i] += 1
 
                                 # Comparing how many figures the object is inside.
                                 elif i == 6:
@@ -217,6 +262,12 @@ class Solver3x3:
                                     first_angle = int(first[i])
                                     second_angle = int(second[i])
                                     tr_array[i] = np.absolute(first_angle - second_angle)
+
+                                # Comparing frames.
+                                else:
+                                    if first[i] != second[i]:
+                                        tr_array[i] += 1
+
                         except:
                             pass
 
@@ -247,6 +298,10 @@ class Solver3x3:
 
             an_h.append(tr_h4)
             an_v.append(tr_v4)
+
+            print("\nPotential Answer " + str(i+1) + ":")
+            print(an_h, end="\n\n")
+            print(an_v)
 
             if self.transformation_comparator(tr_h, an_h) and self.transformation_comparator(tr_v, an_v):
                 self.answer = i + 1
