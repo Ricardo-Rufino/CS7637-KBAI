@@ -9,6 +9,7 @@ class Solver3x3:
         self.answer = -30
         self.problem = problem
         self.size_dictionary = size_dictionary
+        self.guess = np.ones(8)*1000000
 
         # Keys that will be used to access RavenFigure objects from RavensProblem objects.
         self.figure_keys = ["A", "B", "C", "D", "E", "F", "G", "H"]
@@ -134,21 +135,30 @@ class Solver3x3:
         an_h = [tr_h3]
         an_v = [tr_v3]
 
-        print("\nTransformation Matrices:")
-        print(tr_h1, end="\n\n")
-        print(tr_h2, end="\n\n")
-        print(tr_v1, end="\n\n")
-        print(tr_v2, end="\n\n")
-
-        print("\nPartial Answer Matrices:")
-        print(tr_h3, end="\n\n")
-        print(tr_v3, end="\n\n")
+        # print("\nTransformation Matrices:")
+        # print(tr_h1, end="\n\n")
+        # print(tr_h2, end="\n\n")
+        # print(tr_v1, end="\n\n")
+        # print(tr_v2, end="\n\n")
+        #
+        # print("\nPartial Answer Matrices:")
+        # print(tr_h3, end="\n\n")
+        # print(tr_v3, end="\n\n")
 
         # ------------------------------------------------------------------------------------------------------------ #
         #                                        Searching for the Answer                                              #
         # ------------------------------------------------------------------------------------------------------------ #
 
         self.answer_selector(tr_h, tr_v, an_h, an_v, figure32, figure23, figure_matrix_ans)
+
+        if self.answer < 0:
+            self.answer = self.best_guess()
+
+
+    def best_guess(self):
+        result = np.where(self.guess == np.amin(self.guess))
+        return result[0][0] + 1
+
 # -------------------------------------------------------------------------------------------------------------------- #
 #                                                  Helper Methods                                                      #
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -276,7 +286,7 @@ class Solver3x3:
                         "**********************************************************************************************"
 
                     # Last element of transformation array details increases/decreases in objects in figures.
-                    tr_array[-1] = len(matrix2[row][col]) - len(matrix1[row][col])
+                    tr_array[-1] = len(matrix2[row][col])/len(matrix1[row][col])
 
                     # Adding transformation array into transformation matrix.
                     transformation_matrix[row][col] = tr_array
@@ -299,16 +309,20 @@ class Solver3x3:
             an_h.append(tr_h4)
             an_v.append(tr_v4)
 
-            print("\nPotential Answer " + str(i+1) + ":")
-            print(an_h, end="\n\n")
-            print(an_v)
+            # print("\nPotential Answer " + str(i+1) + ":")
+            # print(an_h, end="\n\n")
+            # print(an_v)
 
-            if self.transformation_comparator(tr_h, an_h) and self.transformation_comparator(tr_v, an_v):
+            comp1 = self.transformation_comparator(tr_h, an_h)
+            comp2 = self.transformation_comparator(tr_v, an_v)
+
+            if comp1 == 0 and comp2 == 0:
                 self.answer = i + 1
                 break
             else:
                 an_h.pop(-1)
                 an_v.pop(-1)
+                self.guess[i] = comp1 + comp2
 
     # Helper method that compares lists of transformation matrices.
     # @tr_list1:    (List<2D List>)     first list.
@@ -328,9 +342,21 @@ class Solver3x3:
 
                     if len(array1) == 0 and len(array2) == 0:
                         continue
+                    elif len(array1) == 0 or len(array2) == 0:
+                        counter += 1000
+                    else:
+                        for k in range(0, len(array1)):
+                            if array1[k] != array2[k]:
+                                # Weight for difference in fill.
+                                if k == 0:
+                                    counter += 100
+                                # Weight for difference in shapes.
+                                if k == 2:
+                                    counter += 100
+                                # Weight for difference in amount of objects.
+                                if k == 11:
+                                    counter += 1000
+                                else:
+                                    counter += 1
 
-                    for k in range(0, len(array1)):
-                        if array1[k] != array2[k]:
-                            return False
-
-        return True
+        return counter

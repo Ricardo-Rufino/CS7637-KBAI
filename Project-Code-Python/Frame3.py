@@ -25,7 +25,7 @@ class Frame3:
         self.angle = "0"
 
         # Default coordinates; assuming 3x3 figure position matrix.
-        self.coordinate = "1,1"
+        self.coordinate = "2,2"
 
         # All possible keys that attributes dictionary may use.
         self.keys = ["fill", "height", "shape", "size", "width",
@@ -66,17 +66,36 @@ class Frame3:
                 pass
 
         # Default coordinate values assuming 3x3 figure position matrix.
-        x = 1   # Default x-value of coordinate.
-        y = 1   # Default y-value of coordinate.
+        x = 2   # Default x-value of coordinate.
+        y = 2   # Default y-value of coordinate.
 
         "**************************************************************************************************************"
         "                                              NEEDS COMPLETION                                                "
         "**************************************************************************************************************"
         # Setting up coordinate value for frame.
         if self.left_of != "n/a":
+            # hor_pos = len(self.left_of.split(","))
+            #
+            # if hor_pos < 4:
+            #     x = 1
+            # elif hor_pos < 7:
+            #     x = 0
+            # else:
+            #     x = 2
             pass
+
         if self.above != "n/a":
+            # ver_pos = len(self.above.split(","))
+            #
+            # if ver_pos < 4:
+            #     y = 1
+            # elif ver_pos < 7:
+            #     y = 0
+            # else:
+            #     y = 2
             pass
+
+        self.coordinate = str(x) + "," + str(y)
 
     # Returns list of strings with each element containing the value of the figure's attributes.
     # @return:      (list<string>)      values of figure's attributes.
