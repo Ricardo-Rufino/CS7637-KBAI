@@ -1,11 +1,21 @@
 import numpy as np
 
 class Frame3:
+    # Static variables.
+    row = 2
+    col = 2
+
+    max_above = 0
+    max_left = 0
+
+
 
     # Constructor of class.
     # @id:          (character)     id of frame (i.e. 'a').
     # @attributes:  (dictionary)    contains attributes of the figure (i.e. size, fill, etc.).
-    def __init__(self, figure, id, attributes):
+    def __init__(self, number, figure, id, attributes):
+        self.number = number
+
         self.figure = figure
         self.id = str(id)
         self.attributes = attributes
@@ -72,28 +82,48 @@ class Frame3:
         "**************************************************************************************************************"
         "                                              NEEDS COMPLETION                                                "
         "**************************************************************************************************************"
-        # Setting up coordinate value for frame.
-        if self.left_of != "n/a":
-            # hor_pos = len(self.left_of.split(","))
-            #
-            # if hor_pos < 4:
-            #     x = 1
-            # elif hor_pos < 7:
-            #     x = 0
-            # else:
-            #     x = 2
-            pass
 
-        if self.above != "n/a":
-            # ver_pos = len(self.above.split(","))
-            #
-            # if ver_pos < 4:
-            #     y = 1
-            # elif ver_pos < 7:
-            #     y = 0
-            # else:
-            #     y = 2
-            pass
+        # Number of objects above this.object.
+        if self.above == "n/a":
+            a = 0
+        else:
+            a = len(self.above.split(","))
+
+        # Number of objects to the right of this.object.
+        if self.left_of == "n/a":
+            l = 0
+        else:
+            l = len(self.left_of.split(","))
+
+        if a > Frame3.max_above:                                    # Move up a row.
+            Frame3.max_above = a
+            Frame3.row -= 1
+        if l > Frame3.max_left:                                     # Move left a column.
+            Frame3.max_left = l
+            Frame3.col -= 1
+
+        x = Frame3.row
+        y = Frame3.col
+
+        # if self.left_of != "n/a":
+        #     hor_pos = len(self.left_of.split(","))
+        #
+        #     if hor_pos < 4:
+        #         x = 1
+        #     elif hor_pos < 7:
+        #         x = 0
+        #     else:
+        #         x = 2
+        #
+        # if self.above != "n/a":
+        #     ver_pos = len(self.above.split(","))
+        #
+        #     if ver_pos < 4:
+        #         y = 1
+        #     elif ver_pos < 7:
+        #         y = 0
+        #     else:
+        #         y = 2
 
         self.coordinate = str(x) + "," + str(y)
 
@@ -116,10 +146,20 @@ class Frame3:
 
     # Prints all attributes of the figure's frame.
     def show(self):
-        print("Figure: %s, ID: %s, Fill: %s, Height: %s, Shape: %s, Size: %s, Width: %s, "
+        print("Figure: %s, Num: %s, ID: %s, Fill: %s, Height: %s, Shape: %s, Size: %s, Width: %s, "
               "Above: %s, Inside: %s, Left-Of: %s, Overlaps: %s, Angle: %s, "
               "Coordinate: %s" %
-              (self.figure, self.id, self.fill, self.height, self.shape, self.size, self.width,
+              (self.figure, self.number, self.id,
+               self.fill, self.height, self.shape, self.size, self.width,
                self.above, self.inside, self.left_of, self.overlaps, self.angle,
                self.coordinate))
+
+    @staticmethod
+    def reset_coordinate():
+        Frame3.row = 2
+        Frame3.col = 2
+
+        Frame3.max_above = 0
+        Frame3.max_left = 0
+
 

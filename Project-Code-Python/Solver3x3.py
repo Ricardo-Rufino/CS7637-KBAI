@@ -65,15 +65,20 @@ class Solver3x3:
             raven_object = self.raven_obj_figures[figure]           # RavenObject dictionary for a given figure.
             raven_object_keys = list(raven_object.keys())           # Keys for RavenFigure's Objects dictionary.
             list.sort(raven_object_keys)
+            raven_object_keys.reverse()
 
             frames = []
+            number = 1
             for key in raven_object_keys:
-                frame = Frame3(figure, key, raven_object[key].attributes)
+                frame = Frame3(number, figure, key, raven_object[key].attributes)
                 frame.show()
                 frames.append(frame)
+                number += 1
+
+            Frame3.reset_coordinate()
 
             # Reversing list so it displays frames from inside out.
-            frames.reverse()
+            # frames.reverse()
             self.list_figure.append(frames)
 
         print("")
@@ -83,15 +88,20 @@ class Solver3x3:
             raven_object = self.raven_obj_answers[figure]           # RavenObject dictionary for a given figure.
             raven_object_keys = list(raven_object.keys())           # Keys for RavenFigure's Objects dictionary.
             list.sort(raven_object_keys)
+            raven_object_keys.reverse()
 
             frames = []
+            number = 1
             for key in raven_object_keys:
-                frame = Frame3(figure, key, raven_object[key].attributes)
+                frame = Frame3(number, figure, key, raven_object[key].attributes)
                 frame.show()
                 frames.append(frame)
+                number += 1
+
+            Frame3.reset_coordinate()
 
             # Reversing list so it displays frames from inside out.
-            frames.reverse()
+            # frames.reverse()
             self.list_answers.append(frames)
 
         # ------------------------------------------------------------------------------------------------------------ #
