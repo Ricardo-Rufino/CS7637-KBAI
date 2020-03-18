@@ -58,6 +58,7 @@ class Solver3x3:
         #                                Organizing RavenObjects into Frames (Frame3)                                  #
         # ------------------------------------------------------------------------------------------------------------ #
 
+        print("\n" + problem.name, end="\n")
         print("")
         print("Figures:")
         # Organizing frames for all figures in the problem set from each object dictionary found in RavenFigure class.
