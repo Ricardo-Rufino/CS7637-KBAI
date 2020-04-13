@@ -58,9 +58,9 @@ class Solver3x3:
         #                                Organizing RavenObjects into Frames (Frame3)                                  #
         # ------------------------------------------------------------------------------------------------------------ #
 
-        print("\n" + problem.name, end="\n")
-        print("")
-        print("Figures:")
+        # print("\n" + problem.name, end="\n")
+        # print("")
+        # print("Figures:")
         # Organizing frames for all figures in the problem set from each object dictionary found in RavenFigure class.
         for figure in self.figure_keys:
             raven_object = self.raven_obj_figures[figure]           # RavenObject dictionary for a given figure.
@@ -72,7 +72,7 @@ class Solver3x3:
             number = 1
             for key in raven_object_keys:
                 frame = Frame3(number, figure, key, raven_object[key].attributes)
-                frame.show()
+                # frame.show()
                 frames.append(frame)
                 number += 1
 
@@ -82,8 +82,8 @@ class Solver3x3:
             # frames.reverse()
             self.list_figure.append(frames)
 
-        print("")
-        print("Answers:")
+        # print("")
+        # print("Answers:")
         # Organizing frames for all potential answers from each object dictionary found in RavenFigure class.
         for figure in self.answer_keys:
             raven_object = self.raven_obj_answers[figure]           # RavenObject dictionary for a given figure.
@@ -95,7 +95,7 @@ class Solver3x3:
             number = 1
             for key in raven_object_keys:
                 frame = Frame3(number, figure, key, raven_object[key].attributes)
-                frame.show()
+                # frame.show()
                 frames.append(frame)
                 number += 1
 
@@ -183,7 +183,7 @@ class Solver3x3:
         for figure in frame_list:
             matrix.add(figure)
 
-        matrix.show()
+        # matrix.show()
 
         return matrix
 

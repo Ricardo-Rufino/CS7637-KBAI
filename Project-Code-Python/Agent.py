@@ -13,6 +13,7 @@
 import numpy as np
 from Frame import Frame
 from Solver3x3 import Solver3x3
+from VisualSolver import VisualSolver
 
 
 class Agent:
@@ -65,7 +66,6 @@ class Agent:
     def Solve(self, problem):
 
         # Creating frames for the problem
-
         if problem.hasVerbal:
             if problem.problemType == "2x2":
                 return self.solve_2x2(problem)
@@ -75,8 +75,8 @@ class Agent:
             else:
                 return -10
         else:
-            return -1
-
+            solver = VisualSolver(problem, self.size_dictionary)
+            return solver.answer
         return 2
 
     # Method used to solve 2x2 methods.---------------------------------------------------------------------------------
