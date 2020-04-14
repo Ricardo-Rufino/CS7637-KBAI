@@ -75,8 +75,8 @@ class Agent:
             else:
                 return -10
         else:
-            solver = VisualSolver(problem, self.size_dictionary)
-            return solver.answer
+            solver = VisualSolver(problem)
+            return solver.get_answer()
         return 2
 
     # Method used to solve 2x2 methods.---------------------------------------------------------------------------------
