@@ -1,11 +1,11 @@
 import numpy as np
 from Frame3 import Frame3
-from PIL import Image
+from PIL import Image, ImageChops
 
 
 class VisualSolver:
     problem_num = 0                                             # Problem number.
-    problem_inv = 2                                             # Problem to investigate.
+    problem_inv = 3                                             # Problem to investigate.
 
     def __init__(self, problem):
         VisualSolver.problem_num += 1
@@ -80,14 +80,6 @@ class VisualSolver:
 
         self.get_answer()
 
-    # Returns the number of white and dark pixels in the image.
-    def __pixel_count(self, image: Image) -> tuple:
-        histogram_array = image.histogram()
-        white = histogram_array[-1]
-        dark = histogram_array[0]
-
-        return dark, white
-
     def __image_comparator(self, image1: Image, image2: Image) -> np.array:
         transformation = np.zeros((6, 1))
 
@@ -95,7 +87,15 @@ class VisualSolver:
         dark1, white1 = self.__pixel_count(image1)
         dark2, white2 = self.__pixel_count(image2)
 
-        transformation[0] = dark2-dark1
+        # if self.debug:
+        #     print("Dark 1: " + str(dark1))
+        #     print("Dark 2: " + str(dark2))
+
+        # Identifies if a change in image has occurred.
+        if dark1 != dark2:
+            transformation[0] = 1
+        if dark2 > 1.2*dark1 or dark2 < 0.8*dark1:
+            transformation[1] = 1
 
         return transformation
 
@@ -132,15 +132,30 @@ class VisualSolver:
         for i in range(0, len(array1)):
             print("\t '{0}'  '{1}' \t|\t '{2}'  '{3}'".format(array1[i], array2[i], array3[i], array4[i], align='^', width='10'))
 
+    def __diagonal_analysis(self, image1: Image, image2: Image) -> int:
+        pass
+
     def get_answer(self) -> None:
         a = self.images_problem[0]                                  # Location: (0,0)
         b = self.images_problem[1]                                  # Location: (0,1)
         c = self.images_problem[2]                                  # Location: (0,2)
 
         d = self.images_problem[3]                                  # Location: (1,0)
+        e = self.images_problem[4]                                  # Location: (1,1)
         f = self.images_problem[5]                                  # Location: (1,2)
+
         g = self.images_problem[6]                                  # Location: (2,0)
         h = self.images_problem[7]                                  # Location: (2,1)
+
+        # Checks if diagonals are the same.
+        if self.__are_equal(a, e):
+            if self.debug:
+                print("\nDiagonal are equal!")
+
+            ans = self.__diagonal_analysis(e, self.images_answers)
+            if ans > 0:
+                self.answer = ans
+                return
 
         # Dictionary that contains the differences of all potential answers.
         diff = {}
@@ -177,3 +192,52 @@ class VisualSolver:
         sorted_answers = list(diff.keys())
         sorted_answers.sort()
         self.answer = diff[sorted_answers[0]]
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Functions that Compare Images
+    # ---------------------------------------------------------------------------------------------------------------- #
+
+    def __are_equal(self, image1: Image, image2: Image) -> bool:
+        difference = ImageChops.difference(image1, image2)
+
+        # Dark and white pixels of the first and second image.
+        dark1, white1 = self.__pixel_count(image1)
+        dark2, white2 = self.__pixel_count(image2)
+
+        # Checking for ratio of sameness.
+        dark3, white3 = self.__pixel_count(difference)
+        total = dark3 + white3
+        sameness = dark3/total
+
+        # Checking for dark ratio.
+        dark_ratio = dark1/dark2
+
+        if self.debug:
+            print("\tEquality: " + str(sameness))
+            print("\tDark Ratio: " + str(dark_ratio))
+            print("\tDark 1: " + str(dark1))
+            print("\tDark 1: " + str(dark2), end="\n\n")
+
+        # Equality will be defined if these two metrics are passed.
+        if sameness > 0.95 and 0.95 < dark_ratio < 1.05:
+            return True
+        else:
+            return False
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Helper Functions
+    # ---------------------------------------------------------------------------------------------------------------- #
+
+    # Returns the number of white and dark pixels in the image.
+    def __pixel_count(self, image: Image) -> tuple:
+        histogram_array = image.histogram()
+        white = histogram_array[-1]
+        dark = histogram_array[0]
+
+        return float(dark), float(white)
+
+    def __diagonal_analysis(self, image: Image, ans: list) -> int:
+        for i in range(0, len(ans)):
+            if self.__are_equal(image, ans[i]):
+                return i + 1
+        return -1
