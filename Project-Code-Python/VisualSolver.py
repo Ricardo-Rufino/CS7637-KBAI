@@ -4,14 +4,15 @@ from PIL import Image
 
 
 class VisualSolver:
-    problem_num = -1
-    problem_debug = 0
+    problem_num = 0                                             # Problem number.
+    problem_inv = 2                                             # Problem to investigate.
 
     def __init__(self, problem):
         VisualSolver.problem_num += 1
 
         self.answer = -100
         self.problem = problem
+        self.debug = VisualSolver.problem_num == VisualSolver.problem_inv
 
         # Keys that will be used to access RavenFigure objects from RavensProblem objects.
         self.figure_keys = ["A", "B", "C", "D", "E", "F", "G", "H"]
@@ -33,41 +34,48 @@ class VisualSolver:
         #                                        Collection RavenFigures                                               #
         # ------------------------------------------------------------------------------------------------------------ #
 
+        if self.debug:
+            print("\nAnalysis of " + problem.name + "--------------------", end='\n\n')
+            print("Figures: ")
+
         # Collecting RavenFigure and RavenObject objects for all figures in the problem set.
         for i in self.figure_keys:
 
             # Collecting images from the RPM.
-            raven_figure = problem.figures[i]                       # RavenFigure object.
+            raven_figure = self.problem.figures[i]                  # RavenFigure object.
             image_path = raven_figure.visualFilename                # Filepath of figure.
             image = Image.open(image_path)                          # Image of the figure.
             image = image.convert("1")                              # Image converted into bi-level image.
 
             self.images_problem.append(image)
 
-            if VisualSolver.problem_num == VisualSolver.problem_debug:
+            if self.debug:
                 print(image_path)
-                print(image.size, image.width, image.height)
-                print(image.mode)
-                print(image.histogram())
-                print(type(image))
+                # print(image.size, image.width, image.height)
+                # print(image.mode)
+                # print(image.histogram())
+                # print(type(image))
 
                 # image.show()
+
+        if self.debug:
+            print("\nPotential answers: ")
 
         # Collection images from the potential answers.
         for i in self.answer_keys:
 
             # Collecting problem images.
-            raven_figure = problem.figures[i]                       # RavenFigure object.
+            raven_figure = self.problem.figures[i]                  # RavenFigure object.
             image_path = raven_figure.visualFilename                # Filepath of figure.
             image = Image.open(image_path)                          # Image of the figure.
             image = image.convert("1")                              # Image converted into bi-level image.
 
             self.images_answers.append(image)
 
-            if VisualSolver.problem_num == VisualSolver.problem_debug:
+            if self.debug:
                 print(image_path)
-                print(image.size, image.width, image.height)
-                print(image.mode)
+                # print(image.size, image.width, image.height)
+                # print(image.mode)
                 # image.show()
 
         self.get_answer()
@@ -99,7 +107,7 @@ class VisualSolver:
 
         return transformation
 
-    def __transformation_difference(self, transformation1: list, transformation2: list) -> int:
+    def __transformation_difference(self, transformation1: list, transformation2: list) -> None:
         counter = 0
 
         for i in range(0, len(transformation1)):
@@ -111,11 +119,20 @@ class VisualSolver:
                 el2 = array2[k]
 
                 if el1 != el2:
-                    counter += 1
+                    counter += float(np.abs(el1) + np.abs(el2))
 
         return counter
 
-    def get_answer(self) -> int:
+    def __print_transformation_list(self, tr1: list, tr2: list) -> None:
+        array1 = tr1[0]
+        array2 = tr1[1]
+        array3 = tr2[0]
+        array4 = tr2[1]
+
+        for i in range(0, len(array1)):
+            print("\t '{0}'  '{1}' \t|\t '{2}'  '{3}'".format(array1[i], array2[i], array3[i], array4[i], align='^', width='10'))
+
+    def get_answer(self) -> None:
         a = self.images_problem[0]                                  # Location: (0,0)
         b = self.images_problem[1]                                  # Location: (0,1)
         c = self.images_problem[2]                                  # Location: (0,2)
@@ -132,6 +149,10 @@ class VisualSolver:
         hor_tr1 = self.__row_col_transformation(a, b, c)
         ver_tr1 = self.__row_col_transformation(a, d, g)
 
+        if self.debug:
+            print("\nHorizontal and Vertical Lists: ")
+            self.__print_transformation_list(hor_tr1, ver_tr1)
+
         # Iterating through all the potential answers to find similar horizontal and vertical transformations.
         for i in range(0, len(self.images_answers)):
             ans = self.images_answers[i]
@@ -142,8 +163,13 @@ class VisualSolver:
             hor_diff = self.__transformation_difference(hor_tr1, hor_tr2)
             ver_diff = self.__transformation_difference(ver_tr1, ver_tr2)
 
+            if self.debug:
+                print("\nAnswer " + str(i+1))
+                self.__print_transformation_list(hor_tr2, ver_tr2)
+
             if hor_diff == 0 and ver_diff == 0:
                 self.answer = i+1
+                return
             else:
                 difference = hor_diff + ver_diff
                 diff[difference] = i+1
@@ -151,7 +177,3 @@ class VisualSolver:
         sorted_answers = list(diff.keys())
         sorted_answers.sort()
         self.answer = diff[sorted_answers[0]]
-
-        return self.answer
-
-

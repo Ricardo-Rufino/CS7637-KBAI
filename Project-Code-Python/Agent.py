@@ -75,8 +75,9 @@ class Agent:
             else:
                 return -10
         else:
-            solver = VisualSolver(problem)
-            return solver.get_answer()
+            if problem.problemType == "3x3":
+                solver = VisualSolver(problem)
+                return solver.answer
         return 2
 
     # Method used to solve 2x2 methods.---------------------------------------------------------------------------------
