@@ -1,11 +1,11 @@
 import numpy as np
 from Frame3 import Frame3
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageOps
 
 
 class VisualSolver:
     problem_num = 0                                             # Problem number.
-    problem_inv = 3                                             # Problem to investigate.
+    problem_inv = 1                                             # Problem to investigate.
 
     def __init__(self, problem):
         VisualSolver.problem_num += 1
@@ -80,82 +80,32 @@ class VisualSolver:
 
         self.get_answer()
 
-    def __image_comparator(self, image1: Image, image2: Image) -> np.array:
-        transformation = np.zeros((6, 1))
-
-        # Difference in pixel count.-----------------------------------------
-        dark1, white1 = self.__pixel_count(image1)
-        dark2, white2 = self.__pixel_count(image2)
-
-        # if self.debug:
-        #     print("Dark 1: " + str(dark1))
-        #     print("Dark 2: " + str(dark2))
-
-        # Identifies if a change in image has occurred.
-        if dark1 != dark2:
-            transformation[0] = 1
-        if dark2 > 1.2*dark1 or dark2 < 0.8*dark1:
-            transformation[1] = 1
-
-        return transformation
-
-    def __row_col_transformation(self, image1: Image, image2: Image, image3: Image) -> list:
-        transformation = []
-
-        transformation.append(self.__image_comparator(image1, image2))
-        transformation.append(self.__image_comparator(image2, image3))
-
-        return transformation
-
-    def __transformation_difference(self, transformation1: list, transformation2: list) -> None:
-        counter = 0
-
-        for i in range(0, len(transformation1)):
-            array1 = transformation1[i]
-            array2 = transformation2[i]
-
-            for k in range(0, len(array1)):
-                el1 = array1[k]
-                el2 = array2[k]
-
-                if el1 != el2:
-                    counter += float(np.abs(el1) + np.abs(el2))
-
-        return counter
-
-    def __print_transformation_list(self, tr1: list, tr2: list) -> None:
-        array1 = tr1[0]
-        array2 = tr1[1]
-        array3 = tr2[0]
-        array4 = tr2[1]
-
-        for i in range(0, len(array1)):
-            print("\t '{0}'  '{1}' \t|\t '{2}'  '{3}'".format(array1[i], array2[i], array3[i], array4[i], align='^', width='10'))
-
-    def __diagonal_analysis(self, image1: Image, image2: Image) -> int:
-        pass
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Main Solver Function
+    # ---------------------------------------------------------------------------------------------------------------- #
 
     def get_answer(self) -> None:
-        a = self.images_problem[0]                                  # Location: (0,0)
-        b = self.images_problem[1]                                  # Location: (0,1)
-        c = self.images_problem[2]                                  # Location: (0,2)
+        (a, b, c, d, e, f, g, h) = self.__upackage_problem_list()
 
-        d = self.images_problem[3]                                  # Location: (1,0)
-        e = self.images_problem[4]                                  # Location: (1,1)
-        f = self.images_problem[5]                                  # Location: (1,2)
+        # if self.debug:
+        #     image = ImageChops.difference(a, b)
+        #     image.show()
 
-        g = self.images_problem[6]                                  # Location: (2,0)
-        h = self.images_problem[7]                                  # Location: (2,1)
+        # Special cases.------------------------------------------------------------------------------------------------
+
+        # Checks if horizontal figures are the same.
+        if self.__same_horizontal():
+            return
 
         # Checks if diagonals are the same.
-        if self.__are_equal(a, e):
-            if self.debug:
-                print("\nDiagonal are equal!")
+        if self.__diagonal_analysis(a, e, self.images_answers):
+            return
 
-            ans = self.__diagonal_analysis(e, self.images_answers)
-            if ans > 0:
-                self.answer = ans
-                return
+        # Check if same difference is found in rows and columns.
+        if self.__sameness_analysis(a, b, c, d, f, g, h, self.images_answers):
+            return
+
+        # --------------------------------------------------------------------------------------------------------------
 
         # Dictionary that contains the differences of all potential answers.
         diff = {}
@@ -194,10 +144,80 @@ class VisualSolver:
         self.answer = diff[sorted_answers[0]]
 
     # ---------------------------------------------------------------------------------------------------------------- #
+    # Specific Case Functions
+    # ---------------------------------------------------------------------------------------------------------------- #
+    def __same_horizontal(self) -> bool:
+        (a, b, c, d, e, f, g, h) = self.__upackage_problem_list()
+
+        # First row
+        ab = self.__are_equal(a, b)
+        bc = self.__are_equal(b, c)
+
+        # Second row
+        de = self.__are_equal(d, e)
+        ef = self.__are_equal(e, f)
+
+        # Third row
+        gh = self.__are_equal(g, h)
+
+        if ab and bc and de and ef and gh:
+            for i in range(len(self.images_answers)):
+                if self.__are_equal(h, self.images_answers[i]):
+                    self.answer = i + 1
+                    return True
+
+        return False
+
+    # Function that checks if first two diagonal images are the same, if so, then it looks for a potential image from
+    # the answer pool that keeps this trend.
+    # Helps with following problems:
+    # D-02
+    # D-03
+    def __diagonal_analysis(self, a, e, ans: list) -> bool:
+        if self.__are_equal(a, e):
+            if self.debug:
+                print("\nDiagonal are equal, diagonal analysis will start...")
+
+            for i in range(0, len(ans)):
+                if self.__are_equal(e, ans[i], show=True):
+                    self.answer = i + 1
+                    return True
+
+        return False
+
+    def __sameness_analysis(self, a: Image, b: Image, c: Image, d: Image, f: Image, g: Image, h: Image, ans: list) -> bool:
+
+        # Images that display similarities.
+        # Horizontal:
+        ab = self.__same_inner(a, b)
+        bc = self.__same_inner(b, c)
+        gh = self.__same_inner(g, h)
+
+        # Vertical:
+        ad = self.__same_outer(a, d)
+        dg = self.__same_outer(d, g)
+        cf = self.__same_outer(c, f)
+
+        if ab and bc and gh:
+            if ad and dg and cf:
+                if self.debug:
+                    print("\n Same differences found in rows and columns; sameness analysis will start...")
+
+                for i in range(0, len(ans)):
+                    hi = self.__same_inner(h, ans[i])               # Potential horizontal.
+                    fi = self.__same_outer(f, ans[i])               # Potential vertical.
+
+                    if hi and fi:
+                        self.answer = i + 1
+                        return True
+        return False
+
+    # ---------------------------------------------------------------------------------------------------------------- #
     # Functions that Compare Images
     # ---------------------------------------------------------------------------------------------------------------- #
 
-    def __are_equal(self, image1: Image, image2: Image) -> bool:
+    # Checks if images are the same.
+    def __are_equal(self, image1: Image, image2: Image, show=None) -> bool:
         difference = ImageChops.difference(image1, image2)
 
         # Dark and white pixels of the first and second image.
@@ -207,12 +227,17 @@ class VisualSolver:
         # Checking for ratio of sameness.
         dark3, white3 = self.__pixel_count(difference)
         total = dark3 + white3
-        sameness = dark3/total
+        sameness = dark3 / total
 
         # Checking for dark ratio.
-        dark_ratio = dark1/dark2
+        if dark1 == 0 and dark2 == 0:
+            dark_ratio = 1
+        elif dark1 < dark2:
+            dark_ratio = dark1 / dark2
+        else:
+            dark_ratio = dark2 / dark1
 
-        if self.debug:
+        if self.debug and show is True:
             print("\tEquality: " + str(sameness))
             print("\tDark Ratio: " + str(dark_ratio))
             print("\tDark 1: " + str(dark1))
@@ -223,6 +248,92 @@ class VisualSolver:
             return True
         else:
             return False
+
+    # Checks if the inner section of the image is the same.
+    def __same_inner(self, image1: Image, image2: Image, show=None) -> bool:
+        # Cropping borders.
+        crop1 = ImageOps.crop(image1, border=55)
+        crop2 = ImageOps.crop(image2, border=55)
+
+        if self.__are_equal(crop1, crop2, show):
+            return True
+
+        return False
+
+    # Chekcs if the outer section of the image is the same.
+    def __same_outer(self, image1: Image, image2: Image, show=None) -> bool:
+        crop1 = self.__remove_center(image1)
+        crop2 = self.__remove_center(image2)
+
+        if self.__are_equal(crop1, crop2, show):
+            return True
+
+        return False
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Transformation Functions
+    # ---------------------------------------------------------------------------------------------------------------- #
+
+    def __row_col_transformation(self, image1: Image, image2: Image, image3: Image) -> list:
+        transformation = []
+
+        transformation.append(self.__image_transformation(image1, image2))
+        transformation.append(self.__image_transformation(image2, image3))
+
+        return transformation
+
+    def __image_transformation(self, image1: Image, image2: Image) -> np.array:
+        transformation = np.zeros((6, 1))
+
+        # Difference in pixel count.-----------------------------------------
+        dark1, white1 = self.__pixel_count(image1)
+        dark2, white2 = self.__pixel_count(image2)
+
+        # if self.debug:
+        #     print("Dark 1: " + str(dark1))
+        #     print("Dark 2: " + str(dark2))
+
+        # Identifies if a change in image has occurred.
+        if dark1 != dark2:
+            transformation[0] = 1
+        # Identifies if figure is increasing/decreasing.
+        if dark2 > 1.2*dark1 or dark2 < 0.8*dark1:
+            transformation[1] = 1
+
+        return transformation
+
+    def __image_comparator(self, image1: Image, image2: Image) -> list:
+        transformation = []
+
+        transformation.append(ImageChops.difference(image1, image2))        # Differences
+        transformation.append(ImageChops.logical_or(image1, image2))        # Similarities
+
+        return transformation
+
+    def __transformation_difference(self, transformation1: list, transformation2: list) -> int:
+        counter = 0
+
+        for i in range(0, len(transformation1)):
+            array1 = transformation1[i]
+            array2 = transformation2[i]
+
+            for k in range(0, len(array1)):
+                el1 = array1[k]
+                el2 = array2[k]
+
+                if el1 != el2:
+                    counter += float(np.abs(el1) + np.abs(el2))
+
+        return counter
+
+    def __print_transformation_list(self, tr1: list, tr2: list) -> None:
+        array1 = tr1[0]
+        array2 = tr1[1]
+        array3 = tr2[0]
+        array4 = tr2[1]
+
+        for i in range(0, len(array1)):
+            print("\t '{0}'  '{1}' \t|\t '{2}'  '{3}'".format(array1[i], array2[i], array3[i], array4[i], align='^', width='10'))
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # Helper Functions
@@ -236,8 +347,36 @@ class VisualSolver:
 
         return float(dark), float(white)
 
-    def __diagonal_analysis(self, image: Image, ans: list) -> int:
-        for i in range(0, len(ans)):
-            if self.__are_equal(image, ans[i]):
-                return i + 1
-        return -1
+    # Returns an image with a whitened center.
+    def __remove_center(self, image: Image) -> Image:
+        # Map of all pixels.
+        pixels = image.load()
+
+        # Middle of image.
+        w = int(image.size[0]/2)
+        h = int(image.size[1]/2)
+
+        # Center off-set.
+        off = 38
+
+        # Change black center pixels to white.
+        for i in range(w-off, w+off):
+            for j in range(h-off, h+off):
+                if pixels[i, j] == 0:
+                    pixels[i, j] = 255
+
+        return image
+
+    def __upackage_problem_list(self) -> tuple:
+        a = self.images_problem[0]                  # Location: (0,0)
+        b = self.images_problem[1]                  # Location: (0,1)
+        c = self.images_problem[2]                  # Location: (0,2)
+
+        d = self.images_problem[3]                  # Location: (1,0)
+        e = self.images_problem[4]                  # Location: (1,1)
+        f = self.images_problem[5]                  # Location: (1,2)
+
+        g = self.images_problem[6]                  # Location: (2,0)
+        h = self.images_problem[7]                  # Location: (2,1)
+
+        return a, b, c, d, e, f, g, h
