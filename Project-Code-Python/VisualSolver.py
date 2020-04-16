@@ -5,7 +5,7 @@ from PIL import Image, ImageChops, ImageOps
 
 class VisualSolver:
     problem_num = 0                                             # Problem number.
-    problem_inv = 1                                             # Problem to investigate.
+    problem_inv = 6                                             # Problem to investigate.
 
     def __init__(self, problem):
         VisualSolver.problem_num += 1
@@ -78,6 +78,9 @@ class VisualSolver:
                 # print(image.mode)
                 # image.show()
 
+        tuple(self.images_problem)
+        tuple(self.images_answers)
+
         self.get_answer()
 
     # ---------------------------------------------------------------------------------------------------------------- #
@@ -85,24 +88,47 @@ class VisualSolver:
     # ---------------------------------------------------------------------------------------------------------------- #
 
     def get_answer(self) -> None:
-        (a, b, c, d, e, f, g, h) = self.__upackage_problem_list()
+        (a, b, c, d, e, f, g, h) = self.images_problem
 
         # if self.debug:
-        #     image = ImageChops.difference(a, b)
-        #     image.show()
+        #     image1 = self.__remove_border(g)
+        #     image2 = self.__remove_border(h)
+        #     image3 = self.__remove_border(self.images_answers[-1])
+        #     image4 = self.__remove_center(h)
+        #     image5 = self.__remove_center(self.images_answers[1])
+        #
+        #     image1.show()
+        #     image2.show()
+        #     image3.show()
+        #     image4.show()
+        #     image5.show()
+        #
+        #     print(self.__unique_images([image1, image2, image3]))
+        #     print(self.__are_equal(image4, image5))
 
         # Special cases.------------------------------------------------------------------------------------------------
 
         # Checks if horizontal figures are the same.
         if self.__same_horizontal():
+            print("Used function: same_horizontal")
             return
 
         # Checks if diagonals are the same.
-        if self.__diagonal_analysis(a, e, self.images_answers):
+        if self.__same_diagonal(a, e):
+            print("Used function: same_diagonal")
             return
 
         # Check if same difference is found in rows and columns.
-        if self.__sameness_analysis(a, b, c, d, f, g, h, self.images_answers):
+        if self.__same_inner_outer(self.images_problem):
+            print("Used function: same_inner_outer")
+            return
+
+        # if self.debug:
+        #     for i in self.images_problem:
+        #         i.show()
+
+        if self.__same_horizontal_outer():
+            print("Used function: same_horizontal_outer")
             return
 
         # --------------------------------------------------------------------------------------------------------------
@@ -147,7 +173,7 @@ class VisualSolver:
     # Specific Case Functions
     # ---------------------------------------------------------------------------------------------------------------- #
     def __same_horizontal(self) -> bool:
-        (a, b, c, d, e, f, g, h) = self.__upackage_problem_list()
+        (a, b, c, d, e, f, g, h) = self.images_problem
 
         # First row
         ab = self.__are_equal(a, b)
@@ -170,22 +196,27 @@ class VisualSolver:
 
     # Function that checks if first two diagonal images are the same, if so, then it looks for a potential image from
     # the answer pool that keeps this trend.
-    # Helps with following problems:
+    # Helps with the following problems:
     # D-02
     # D-03
-    def __diagonal_analysis(self, a, e, ans: list) -> bool:
+    def __same_diagonal(self, a, e) -> bool:
         if self.__are_equal(a, e):
             if self.debug:
                 print("\nDiagonal are equal, diagonal analysis will start...")
 
-            for i in range(0, len(ans)):
-                if self.__are_equal(e, ans[i], show=True):
+            for i in range(0, len(self.images_answers)):
+                if self.__are_equal(e, self.images_answers[i], show=True):
                     self.answer = i + 1
                     return True
 
         return False
 
-    def __sameness_analysis(self, a: Image, b: Image, c: Image, d: Image, f: Image, g: Image, h: Image, ans: list) -> bool:
+    # Function that checks if the inner image remains the same (horizontally) and if the outer image remains the same
+    # (vertically).
+    # Helps with the following problems:
+    # D-04
+    def __same_inner_outer(self, rpm: list) -> bool:
+        (a, b, c, d, e, f, g, h) = self.images_problem
 
         # Images that display similarities.
         # Horizontal:
@@ -200,16 +231,54 @@ class VisualSolver:
 
         if ab and bc and gh:
             if ad and dg and cf:
-                if self.debug:
-                    print("\n Same differences found in rows and columns; sameness analysis will start...")
-
-                for i in range(0, len(ans)):
-                    hi = self.__same_inner(h, ans[i])               # Potential horizontal.
-                    fi = self.__same_outer(f, ans[i])               # Potential vertical.
+                for i in range(0, len(self.images_answers)):
+                    # Potential horizontal and vertical piece.
+                    hi = self.__same_inner(h, self.images_answers[i])
+                    fi = self.__same_outer(f, self.images_answers[i])
 
                     if hi and fi:
                         self.answer = i + 1
                         return True
+        return False
+
+    def __same_horizontal_outer(self):
+        inner_images = []                                                   # List of images with removed borders.
+        outer_images = []                                                   # List of images with removed centers.
+
+        for i in self.images_problem:
+            inner_images.append(self.__remove_border(i))
+            outer_images.append(self.__remove_center(i))
+
+        # Checking that the current problem contains this trend.
+        for i in [0, 3]:
+
+            row_inner = []
+            for j in range(3):
+                row_inner.append(inner_images[i+j])
+
+                if not self.__are_equal(outer_images[i+j], outer_images[i+j]):
+                    return False
+
+            if not self.__unique_images(row_inner):
+                return False
+
+        # Trying to find a answer.
+        if self.__are_equal(outer_images[-2], outer_images[-1]):
+            row_inner = [inner_images[-2], inner_images[-1]]
+            for i in range(len(self.images_answers)):
+
+                ans_outer = self.__remove_center(self.images_answers[i])
+                ans_inner = self.__remove_border(self.images_answers[i])
+
+                row_inner.append(ans_inner)
+
+                if self.__are_equal(outer_images[-1], ans_outer) and self.__unique_images(row_inner):
+                    self.answer = i + 1
+                    return True
+
+                else:
+                    row_inner.pop()
+
         return False
 
     # ---------------------------------------------------------------------------------------------------------------- #
@@ -349,12 +418,16 @@ class VisualSolver:
 
     # Returns an image with a whitened center.
     def __remove_center(self, image: Image) -> Image:
+
+        # Makes a copy of the image to prevent changes to the original.
+        copy = image.copy()
+
         # Map of all pixels.
-        pixels = image.load()
+        pixels = copy.load()
 
         # Middle of image.
-        w = int(image.size[0]/2)
-        h = int(image.size[1]/2)
+        w = int(copy.size[0] / 2)
+        h = int(copy.size[1] / 2)
 
         # Center off-set.
         off = 38
@@ -365,18 +438,21 @@ class VisualSolver:
                 if pixels[i, j] == 0:
                     pixels[i, j] = 255
 
-        return image
+        return copy
 
-    def __upackage_problem_list(self) -> tuple:
-        a = self.images_problem[0]                  # Location: (0,0)
-        b = self.images_problem[1]                  # Location: (0,1)
-        c = self.images_problem[2]                  # Location: (0,2)
+    # Returns an image with a whitened border.
+    def __remove_border(self, image: Image) -> Image:
+        crop = ImageOps.crop(image, border=55)
 
-        d = self.images_problem[3]                  # Location: (1,0)
-        e = self.images_problem[4]                  # Location: (1,1)
-        f = self.images_problem[5]                  # Location: (1,2)
+        return crop
 
-        g = self.images_problem[6]                  # Location: (2,0)
-        h = self.images_problem[7]                  # Location: (2,1)
+    def __unique_images(self, images: list) -> bool:
+        comp1 = self.__are_equal(images[0], images[1])
+        comp2 = self.__are_equal(images[0], images[2])
+        comp3 = self.__are_equal(images[1], images[2])
 
-        return a, b, c, d, e, f, g, h
+        if not comp1 and not comp2 and not comp3:
+            return True
+
+        return False
+
