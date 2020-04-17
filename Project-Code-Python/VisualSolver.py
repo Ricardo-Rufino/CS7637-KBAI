@@ -4,8 +4,8 @@ from PIL import Image, ImageChops, ImageOps
 
 
 class VisualSolver:
-    problem_num = 0                                             # Problem number.
-    problem_inv = 6                                             # Problem to investigate.
+    problem_num = 0  # Problem number.
+    problem_inv = 13  # Problem to investigate.
 
     def __init__(self, problem):
         VisualSolver.problem_num += 1
@@ -42,10 +42,10 @@ class VisualSolver:
         for i in self.figure_keys:
 
             # Collecting images from the RPM.
-            raven_figure = self.problem.figures[i]                  # RavenFigure object.
-            image_path = raven_figure.visualFilename                # Filepath of figure.
-            image = Image.open(image_path)                          # Image of the figure.
-            image = image.convert("1")                              # Image converted into bi-level image.
+            raven_figure = self.problem.figures[i]  # RavenFigure object.
+            image_path = raven_figure.visualFilename  # Filepath of figure.
+            image = Image.open(image_path)  # Image of the figure.
+            image = image.convert("1")  # Image converted into bi-level image.
 
             self.images_problem.append(image)
 
@@ -65,10 +65,10 @@ class VisualSolver:
         for i in self.answer_keys:
 
             # Collecting problem images.
-            raven_figure = self.problem.figures[i]                  # RavenFigure object.
-            image_path = raven_figure.visualFilename                # Filepath of figure.
-            image = Image.open(image_path)                          # Image of the figure.
-            image = image.convert("1")                              # Image converted into bi-level image.
+            raven_figure = self.problem.figures[i]  # RavenFigure object.
+            image_path = raven_figure.visualFilename  # Filepath of figure.
+            image = Image.open(image_path)  # Image of the figure.
+            image = image.convert("1")  # Image converted into bi-level image.
 
             self.images_answers.append(image)
 
@@ -90,105 +90,108 @@ class VisualSolver:
     def get_answer(self) -> None:
         (a, b, c, d, e, f, g, h) = self.images_problem
 
-        # if self.debug:
-        #     image1 = self.__remove_border(g)
-        #     image2 = self.__remove_border(h)
-        #     image3 = self.__remove_border(self.images_answers[-1])
-        #     image4 = self.__remove_center(h)
-        #     image5 = self.__remove_center(self.images_answers[1])
-        #
-        #     image1.show()
-        #     image2.show()
-        #     image3.show()
-        #     image4.show()
-        #     image5.show()
-        #
-        #     print(self.__unique_images([image1, image2, image3]))
-        #     print(self.__are_equal(image4, image5))
+        if self.debug:
+            ans = self.images_answers[0]
+            image1 = ImageChops.logical_and(g, h)
+            print(self.__are_equal(image1, ans))
+            image1.show()
+
+
+
 
         # Special cases.------------------------------------------------------------------------------------------------
 
         # Checks if horizontal figures are the same.
-        if self.__same_horizontal():
+        if self.__horizontal_addition():
             print("Used function: same_horizontal")
             return
 
         # Checks if diagonals are the same.
-        if self.__same_diagonal(a, e):
+        if self.__same_diagonal():
             print("Used function: same_diagonal")
             return
 
         # Check if same difference is found in rows and columns.
-        if self.__same_inner_outer(self.images_problem):
+        if self.__same_inner_outer():
             print("Used function: same_inner_outer")
             return
-
-        # if self.debug:
-        #     for i in self.images_problem:
-        #         i.show()
 
         if self.__same_horizontal_outer():
             print("Used function: same_horizontal_outer")
             return
 
+        if self.__sameness_comparator():
+            print("Used function: sameness_comparator")
+            return
+
+        if self.__guess_by_uniqueness():
+            print("Used function: guess_by_uniqueness")
+            return
+
         # --------------------------------------------------------------------------------------------------------------
 
-        # Dictionary that contains the differences of all potential answers.
-        diff = {}
-
-        # Known transformation from the first row and column of the RPM.
-        hor_tr1 = self.__row_col_transformation(a, b, c)
-        ver_tr1 = self.__row_col_transformation(a, d, g)
-
-        if self.debug:
-            print("\nHorizontal and Vertical Lists: ")
-            self.__print_transformation_list(hor_tr1, ver_tr1)
-
-        # Iterating through all the potential answers to find similar horizontal and vertical transformations.
-        for i in range(0, len(self.images_answers)):
-            ans = self.images_answers[i]
-            hor_tr2 = self.__row_col_transformation(g, h, ans)
-            ver_tr2 = self.__row_col_transformation(c, f, ans)
-
-            # Differences between known and potential answers.
-            hor_diff = self.__transformation_difference(hor_tr1, hor_tr2)
-            ver_diff = self.__transformation_difference(ver_tr1, ver_tr2)
-
-            if self.debug:
-                print("\nAnswer " + str(i+1))
-                self.__print_transformation_list(hor_tr2, ver_tr2)
-
-            if hor_diff == 0 and ver_diff == 0:
-                self.answer = i+1
-                return
-            else:
-                difference = hor_diff + ver_diff
-                diff[difference] = i+1
-
-        sorted_answers = list(diff.keys())
-        sorted_answers.sort()
-        self.answer = diff[sorted_answers[0]]
+        # # Dictionary that contains the differences of all potential answers.
+        # diff = {}
+        #
+        # # Known transformation from the first row and column of the RPM.
+        # hor_tr1 = self.__row_col_transformation(a, b, c)
+        # ver_tr1 = self.__row_col_transformation(a, d, g)
+        #
+        # if self.debug:
+        #     print("\nHorizontal and Vertical Lists: ")
+        #     self.__print_transformation_list(hor_tr1, ver_tr1)
+        #
+        # # Iterating through all the potential answers to find similar horizontal and vertical transformations.
+        # for i in range(0, len(self.images_answers)):
+        #     ans = self.images_answers[i]
+        #     hor_tr2 = self.__row_col_transformation(g, h, ans)
+        #     ver_tr2 = self.__row_col_transformation(c, f, ans)
+        #
+        #     # Differences between known and potential answers.
+        #     hor_diff = self.__transformation_difference(hor_tr1, hor_tr2)
+        #     ver_diff = self.__transformation_difference(ver_tr1, ver_tr2)
+        #
+        #     if self.debug:
+        #         print("\nAnswer " + str(i+1))
+        #         self.__print_transformation_list(hor_tr2, ver_tr2)
+        #
+        #     if hor_diff == 0 and ver_diff == 0:
+        #         self.answer = i+1
+        #         return
+        #     else:
+        #         difference = hor_diff + ver_diff
+        #         diff[difference] = i+1
+        #
+        # sorted_answers = list(diff.keys())
+        # sorted_answers.sort()
+        # self.answer = diff[sorted_answers[0]]
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # Specific Case Functions
     # ---------------------------------------------------------------------------------------------------------------- #
-    def __same_horizontal(self) -> bool:
+
+    # Function that checks if the horizontal images are the same.
+    # Helps with the following problems:
+    # D-01
+    def __horizontal_addition(self) -> bool:
         (a, b, c, d, e, f, g, h) = self.images_problem
 
-        # First row
-        ab = self.__are_equal(a, b)
-        bc = self.__are_equal(b, c)
+        # Addition of first row.
+        ab = self.__add_images(a, b)
+        row1 = self.__are_equal(ab, c)
 
-        # Second row
-        de = self.__are_equal(d, e)
-        ef = self.__are_equal(e, f)
+        # Addition of second row.
+        de = self.__add_images(d, e)
+        row2 = self.__are_equal(de, f)
 
-        # Third row
-        gh = self.__are_equal(g, h)
+        # Partial addition of third row.
+        gh = self.__add_images(g, h)
 
-        if ab and bc and de and ef and gh:
+        # Finding potential answer.
+        if row1 and row2:
             for i in range(len(self.images_answers)):
-                if self.__are_equal(h, self.images_answers[i]):
+                ans = self.images_answers[i]
+                if self.__are_equal(gh, ans):
                     self.answer = i + 1
                     return True
 
@@ -199,13 +202,20 @@ class VisualSolver:
     # Helps with the following problems:
     # D-02
     # D-03
-    def __same_diagonal(self, a, e) -> bool:
-        if self.__are_equal(a, e):
-            if self.debug:
-                print("\nDiagonal are equal, diagonal analysis will start...")
+    # D-11
+    def __same_diagonal(self) -> bool:
+        (a, b, c, d, e, f, g, h) = self.images_problem
 
+        # Checking if diagonals are equal.
+        ae_equal = self.__are_equal(a, e)
+        dh_equal = self.__are_equal(d, h)
+        bf_equal = self.__are_equal(b, f)
+
+        # Looking for answer.
+        if ae_equal and dh_equal and bf_equal:
             for i in range(0, len(self.images_answers)):
-                if self.__are_equal(e, self.images_answers[i], show=True):
+                ans = self.images_answers[i]
+                if self.__are_equal(e, ans, show=True):
                     self.answer = i + 1
                     return True
 
@@ -215,7 +225,7 @@ class VisualSolver:
     # (vertically).
     # Helps with the following problems:
     # D-04
-    def __same_inner_outer(self, rpm: list) -> bool:
+    def __same_inner_outer(self) -> bool:
         (a, b, c, d, e, f, g, h) = self.images_problem
 
         # Images that display similarities.
@@ -241,9 +251,10 @@ class VisualSolver:
                         return True
         return False
 
+    # Function that checks if the horizontal images are the same and that the vertical outer images are the same.
     def __same_horizontal_outer(self):
-        inner_images = []                                                   # List of images with removed borders.
-        outer_images = []                                                   # List of images with removed centers.
+        inner_images = []  # List of images with removed borders.
+        outer_images = []  # List of images with removed centers.
 
         for i in self.images_problem:
             inner_images.append(self.__remove_border(i))
@@ -254,9 +265,9 @@ class VisualSolver:
 
             row_inner = []
             for j in range(3):
-                row_inner.append(inner_images[i+j])
+                row_inner.append(inner_images[i + j])
 
-                if not self.__are_equal(outer_images[i+j], outer_images[i+j]):
+                if not self.__are_equal(outer_images[i + j], outer_images[i + j]):
                     return False
 
             if not self.__unique_images(row_inner):
@@ -278,6 +289,75 @@ class VisualSolver:
 
                 else:
                     row_inner.pop()
+
+        return False
+
+    # This function checks if the sameness across rows rows and columns is the same; and that columns contain unique
+    # inner images.
+    def __sameness_comparator(self):
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        # Comparing sameness of first row.
+        ab = ImageChops.logical_or(a, b)
+        bc = ImageChops.logical_or(b, c)
+        same_first_row = self.__are_equal(ab, bc)
+
+        # Comparing sameness of first column.
+        ad = ImageChops.logical_or(a, d)
+        dg = ImageChops.logical_or(d, g)
+        same_first_col = self.__are_equal(ad, dg)
+
+        # Checking for unique inner shapes in each column.
+        unique_first_col = self.__unique_inner(a, d, g)
+
+        # Check for solution.
+        if same_first_row and same_first_col and unique_first_col:
+            gh = ImageChops.logical_or(g, h)  # Sameness of partial third row.
+            cf = ImageChops.logical_or(c, f)  # Sameness of partial third column.
+            for i in range(len(self.images_answers)):
+                ans = self.images_answers[i]
+
+                hi = ImageChops.logical_or(h, ans)
+                fi = ImageChops.logical_or(f, ans)
+
+                same_third_row = self.__are_equal(gh, hi)
+                same_third_col = self.__are_equal(cf, fi)
+                unique_third_col = self.__unique_inner(c, f, ans)
+
+                if same_third_row and same_third_col and unique_third_col:
+                    self.answer = i + 1
+                    return True
+
+        return False
+
+    # Helps with the following problems:
+    # D-05
+    # D-07
+    # D-09
+    # D-10
+    def __guess_by_uniqueness(self) -> bool:
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        # Checking if images in the problem are unique.
+        for i in range(len(self.images_problem)):
+            for j in range(len(self.images_problem)):
+                image1 = self.images_problem[i]
+                image2 = self.images_problem[j]
+                if i != j and self.__are_equal(image1, image2):
+                    return False
+
+        # Check for potential answer.
+        ans = self.images_answers
+        for i in range(len(ans)):
+            counter = 0
+            for j in self.images_problem:
+                if self.__are_equal(ans[i], j):
+                    continue
+                counter += 1
+
+            if counter == len(ans):
+                self.answer = i + 1
+                return True
 
         return False
 
@@ -366,7 +446,7 @@ class VisualSolver:
         if dark1 != dark2:
             transformation[0] = 1
         # Identifies if figure is increasing/decreasing.
-        if dark2 > 1.2*dark1 or dark2 < 0.8*dark1:
+        if dark2 > 1.2 * dark1 or dark2 < 0.8 * dark1:
             transformation[1] = 1
 
         return transformation
@@ -374,8 +454,8 @@ class VisualSolver:
     def __image_comparator(self, image1: Image, image2: Image) -> list:
         transformation = []
 
-        transformation.append(ImageChops.difference(image1, image2))        # Differences
-        transformation.append(ImageChops.logical_or(image1, image2))        # Similarities
+        transformation.append(ImageChops.difference(image1, image2))  # Differences
+        transformation.append(ImageChops.logical_or(image1, image2))  # Similarities
 
         return transformation
 
@@ -402,11 +482,19 @@ class VisualSolver:
         array4 = tr2[1]
 
         for i in range(0, len(array1)):
-            print("\t '{0}'  '{1}' \t|\t '{2}'  '{3}'".format(array1[i], array2[i], array3[i], array4[i], align='^', width='10'))
+            print("\t '{0}'  '{1}' \t|\t '{2}'  '{3}'".format(array1[i], array2[i], array3[i], array4[i], align='^',
+                                                              width='10'))
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # Helper Functions
     # ---------------------------------------------------------------------------------------------------------------- #
+
+    # Adds images together.
+    def __add_images(self, image1: Image, image2: Image) -> Image:
+        if self.__are_equal(image1, image2):
+            return image1
+        else:
+            return ImageChops.logical_and(image1, image2)
 
     # Returns the number of white and dark pixels in the image.
     def __pixel_count(self, image: Image) -> tuple:
@@ -433,8 +521,8 @@ class VisualSolver:
         off = 38
 
         # Change black center pixels to white.
-        for i in range(w-off, w+off):
-            for j in range(h-off, h+off):
+        for i in range(w - off, w + off):
+            for j in range(h - off, h + off):
                 if pixels[i, j] == 0:
                     pixels[i, j] = 255
 
@@ -446,6 +534,7 @@ class VisualSolver:
 
         return crop
 
+    # Checks if the images in the list are all unique.
     def __unique_images(self, images: list) -> bool:
         comp1 = self.__are_equal(images[0], images[1])
         comp2 = self.__are_equal(images[0], images[2])
@@ -456,3 +545,22 @@ class VisualSolver:
 
         return False
 
+    # Checks if images have the same inner image.
+    def __unique_inner(self, image1: Image, image2: Image, image3: Image):
+        in1 = self.__remove_border(image1)
+        in2 = self.__remove_border(image2)
+        in3 = self.__remove_border(image3)
+
+        in_list = [in1, in2, in3]
+
+        return self.__unique_images(in_list)
+
+    # Checks if images have the same outer image.
+    def __unique_outer(self, image1: Image, image2: Image, image3: Image):
+        in1 = self.__remove_center(image1)
+        in2 = self.__remove_center(image2)
+        in3 = self.__remove_center(image3)
+
+        in_list = [in1, in2, in3]
+
+        return self.__unique_images(in_list)
