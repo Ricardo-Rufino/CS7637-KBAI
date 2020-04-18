@@ -54,6 +54,20 @@ class Agent:
                     self.value[key] = self.counter
                     self.counter += 1
 
+        self.correctness = {
+            0: 1.0,
+            1: 1.0,
+            2: 1.0,
+            3: 1.0,
+            4: 2/3,
+            5: 9/14,
+            6: 1,
+            7: 1,
+            8: 1,
+            9: 1,
+            10: 1,
+        }
+
     # The primary method for solving incoming Raven's Progressive Matrices.
     # For each problem, your Agent's Solve() method will be called. At the
     # conclusion of Solve(), your Agent should return an int representing its
@@ -76,7 +90,7 @@ class Agent:
                 return -10
         else:
             if problem.problemType == "3x3":
-                solver = VisualSolver(problem)
+                solver = VisualSolver(problem, self.correctness)
                 return solver.answer
         return 2
 

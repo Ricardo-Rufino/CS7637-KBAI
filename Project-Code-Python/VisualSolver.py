@@ -5,14 +5,19 @@ from PIL import Image, ImageChops, ImageOps
 
 class VisualSolver:
     problem_num = 0  # Problem number.
-    problem_inv = 21  # Problem to investigate.
+    problem_inv = 2  # Problem to investigate.
 
-    def __init__(self, problem):
+    report = np.zeros((11, 24), dtype=int)
+
+    def __init__(self, problem, correctness: dict):
         VisualSolver.problem_num += 1
 
         self.answer = -100
         self.problem = problem
         self.debug = VisualSolver.problem_num == VisualSolver.problem_inv
+
+        # Dictionary that is used for answer tie-breakers.
+        self.correctness = correctness
 
         # Keys that will be used to access RavenFigure objects from RavensProblem objects.
         self.figure_keys = ["A", "B", "C", "D", "E", "F", "G", "H"]
@@ -63,12 +68,16 @@ class VisualSolver:
         tuple(self.images_answers)
 
         if self.debug:
-            print("All figure loaded properly, analysis will now star...")
+            print("All figure loaded properly, analysis will now start...")
 
         self.get_answer()
 
         if self.debug:
             print("\nAnalysis has concluded.---------------------------", end="\n\n")
+
+        # if VisualSolver.problem_num == 24:
+        #     print("Performance Review: ")
+        #     self.__print_report()
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # Main Solver Function
@@ -77,60 +86,56 @@ class VisualSolver:
     def get_answer(self) -> None:
         (a, b, c, d, e, f, g, h) = self.images_problem
 
+        # List of all functions.
+        func_list = [self.__horizontal_addition,
+                     self.__same_diagonal,
+                     self.__same_inner_outer,
+                     self.__same_horizontal_outer,
+                     self.__sameness_comparator,
+                     self.__guess_by_uniqueness,
+                     self.__reverse_addition,
+                     self.__edge_addition,
+                     self.__similarity_addition,
+                     self.__similarity_retention,
+                     self.__halves_addition]
+
+        # List that contains all the answers calculated from the functions.
+        answer_list = np.zeros((len(func_list), 1))
+
+        report_j = VisualSolver.problem_num-1
+
+        for i in range(len(func_list)):
+            func = func_list[i]
+
+            if func():
+                answer_list[i] = self.answer
+                # VisualSolver.report[i, report_j] = self.answer
+
+        # Analysing answers.
+        candidates = []
+        for i in range(answer_list.size):
+            if answer_list[i] != 0:
+                attributes = [answer_list[i], self.correctness[i]]
+                candidates.append(attributes)
+
+        if len(candidates) > 1:
+            correct_ans = candidates[0][0]
+            confidence = candidates[0][1]
+            for candidate in candidates:
+                if candidate[0] != correct_ans:
+                    if candidate[1] > confidence:
+                        correct_ans = candidate[0]
+                        confidence = candidate[1]
+
+            self.answer = correct_ans
+
+        # if self.debug:
+        #     self.__print_report()
+
         # if self.debug:
         #     for i in self.images_problem:
         #         image1 = self.__remove_top(i)
         #         image1.show()
-
-        # Special cases.------------------------------------------------------------------------------------------------
-
-        # Checks if horizontal figures are the same.
-        if self.__horizontal_addition():
-            print("Used function: same_horizontal")
-            return
-
-        # Checks if diagonals are the same.
-        if self.__same_diagonal():
-            print("Used function: same_diagonal")
-            return
-
-        # Check if same difference is found in rows and columns.
-        if self.__same_inner_outer():
-            print("Used function: same_inner_outer")
-            return
-
-        if self.__same_horizontal_outer():
-            print("Used function: same_horizontal_outer")
-            return
-
-        if self.__sameness_comparator():
-            print("Used function: sameness_comparator")
-            return
-
-        if self.__guess_by_uniqueness():
-            print("Used function: guess_by_uniqueness")
-            return
-
-        if self.__reverse_addition():
-            print("Used function: reverse_addition")
-            return
-
-        if self.__edge_addition():
-            print("Used function: reverse_addition")
-            return
-
-        if self.__similarity_addition():
-            print("Used function: similarity_addition")
-            return
-
-        if self.__similarity_retention():
-            print("Used function: similarity_retention")
-            return
-
-        if self.__halves_addition():
-            print("Used function: halves retention")
-            pass
-
         # --------------------------------------------------------------------------------------------------------------
 
     # ---------------------------------------------------------------------------------------------------------------- #
@@ -778,3 +783,15 @@ class VisualSolver:
         in_list = [in1, in2, in3]
 
         return self.__unique_images(in_list)
+
+    # Prints the performance report of VisualSolver.
+    def __print_report(self):
+        row, col = VisualSolver.report.shape
+
+        for i in range(row):
+            for j in range(col):
+                if j == 12:
+                    print("|", end= "\t")
+                print(str(VisualSolver.report[i, j]), end="\t\t")
+            print()
+        print()
