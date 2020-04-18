@@ -5,7 +5,7 @@ from PIL import Image, ImageChops, ImageOps
 
 class VisualSolver:
     problem_num = 0  # Problem number.
-    problem_inv = 13  # Problem to investigate.
+    problem_inv = 21  # Problem to investigate.
 
     def __init__(self, problem):
         VisualSolver.problem_num += 1
@@ -90,13 +90,10 @@ class VisualSolver:
     def get_answer(self) -> None:
         (a, b, c, d, e, f, g, h) = self.images_problem
 
-        if self.debug:
-            ans = self.images_answers[0]
-            image1 = ImageChops.logical_and(g, h)
-            print(self.__are_equal(image1, ans))
-            image1.show()
-
-
+        # if self.debug:
+        #     for i in self.images_problem:
+        #         image1 = self.__remove_top(i)
+        #         image1.show()
 
 
         # Special cases.------------------------------------------------------------------------------------------------
@@ -105,28 +102,48 @@ class VisualSolver:
         if self.__horizontal_addition():
             print("Used function: same_horizontal")
             return
-
-        # Checks if diagonals are the same.
-        if self.__same_diagonal():
-            print("Used function: same_diagonal")
-            return
-
-        # Check if same difference is found in rows and columns.
-        if self.__same_inner_outer():
-            print("Used function: same_inner_outer")
-            return
-
-        if self.__same_horizontal_outer():
-            print("Used function: same_horizontal_outer")
-            return
-
-        if self.__sameness_comparator():
-            print("Used function: sameness_comparator")
-            return
-
+        #
+        # # Checks if diagonals are the same.
+        # if self.__same_diagonal():
+        #     print("Used function: same_diagonal")
+        #     return
+        #
+        # # Check if same difference is found in rows and columns.
+        # if self.__same_inner_outer():
+        #     print("Used function: same_inner_outer")
+        #     return
+        #
+        # if self.__same_horizontal_outer():
+        #     print("Used function: same_horizontal_outer")
+        #     return
+        #
+        # if self.__sameness_comparator():
+        #     print("Used function: sameness_comparator")
+        #     return
+        #
         if self.__guess_by_uniqueness():
             print("Used function: guess_by_uniqueness")
             return
+
+        if self.__reverse_addition():
+            print("Used function: reverse_addition")
+            return
+
+        if self.__edge_addition():
+            print("Used function: reverse_addition")
+            return
+
+        if self.__similarity_addition():
+            print("Used function: similarity_addition")
+            return
+
+        if self.__similarity_retention():
+            print("Used function: similarity_retention")
+            return
+
+        if self.__halves_addition():
+            print("Used function: halves retention")
+            pass
 
         # --------------------------------------------------------------------------------------------------------------
 
@@ -173,6 +190,9 @@ class VisualSolver:
     # Function that checks if the horizontal images are the same.
     # Helps with the following problems:
     # D-01
+    # E-01
+    # E-02
+    # E-03?
     def __horizontal_addition(self) -> bool:
         (a, b, c, d, e, f, g, h) = self.images_problem
 
@@ -361,12 +381,245 @@ class VisualSolver:
 
         return False
 
+    # Function that checks if right-left and bottom-up addition is present.
+    # Helps with the following problems:
+    # E-05
+    def __reverse_addition(self):
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        # Checkin if right-left addition of the first two rows exists.
+        bc = self.__add_images(b, c)
+        ef = self.__add_images(e, f)
+
+        row1 = self.__are_equal(bc, a)
+        row2 = self.__are_equal(ef, d)
+
+        # Checkin if bottom-up addition of the first two columns exists.
+        dg = self.__add_images(d, g)
+        eh = self.__add_images(e, h)
+
+        col1 = self.__are_equal(dg, a)
+        col2 = self.__are_equal(eh, b)
+
+        # Looking for potential answer.
+        if row1 and row2 and col1 and col2:
+            for i in range(len(self.images_answers)):
+                ans = self.images_answers[i]
+
+                hi = self.__add_images(h, ans)
+                fi = self.__add_images(f, ans)
+
+                row3 = self.__are_equal(hi, g)
+                col3 = self.__are_equal(fi, c)
+
+                if row3 and col3:
+                    self.answer = i + 1
+                    return True
+
+        return False
+
+    # Function that checks if edge addition is present. That is, if the addition of the edges results in the center
+    # image of the row/column.
+    # Helps with the following problems:
+    # E-06
+    def __edge_addition(self):
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        # Checkin if edge addition of the first two rows exists.
+        ac = self.__add_images(a, c)
+        df = self.__add_images(d, f)
+
+        row1 = self.__are_equal(ac, b)
+        row2 = self.__are_equal(df, e)
+
+        # Checkin if edge addition of the first two columns exists.
+        ag = self.__add_images(a, g)
+        bh = self.__add_images(b, h)
+
+        col1 = self.__are_equal(ag, d)
+        col2 = self.__are_equal(bh, e)
+
+        # Looking for potential answer.
+        if row1 and row2 and col1 and col2:
+            for i in range(len(self.images_answers)):
+                ans = self.images_answers[i]
+
+                gi = self.__add_images(g, ans)
+                ci = self.__add_images(c, ans)
+
+                row3 = self.__are_equal(gi, h)
+                col3 = self.__are_equal(ci, f)
+
+                if row3 and col3:
+                    self.answer = i + 1
+                    return True
+
+        return False
+
+    # Function that adds the first two images in a row/column and finds the similarity between them as well. It adds
+    # the similarity to the third image in the row/column and checks if its equal to the addition of the first two.
+    # Helps with the following problems:
+    # E-01
+    # E-02
+    # E-05
+    # E-06
+    # E-07
+    # E-08
+    # Rating = 10
+    def __similarity_addition(self):
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        drt = [0.90, 1.1]
+
+        # Checkin if edge addition of the first two rows exists.
+        ab = self.__add_images(a, b)
+        de = self.__add_images(d, e)
+
+        ab_sim = ImageChops.logical_or(a, b)
+        de_sim = ImageChops.logical_or(d, e)
+
+        c_plus_sim = self.__add_images(c, ab_sim)
+        f_plus_sim = self.__add_images(f, de_sim)
+
+        row1 = self.__are_equal(c_plus_sim, ab, dark_ratio_tolerance=drt)
+        row2 = self.__are_equal(f_plus_sim, de, dark_ratio_tolerance=drt)
+
+        # Checkin if edge addition of the first two columns exists.
+        ad = self.__add_images(a, d)
+        be = self.__add_images(b, e)
+
+        ad_sim = ImageChops.logical_or(a, d)
+        be_sim = ImageChops.logical_or(b, e)
+
+        g_plus_sim = self.__add_images(g, ad_sim)
+        h_plus_sim = self.__add_images(h, be_sim)
+
+        col1 = self.__are_equal(g_plus_sim, ad, dark_ratio_tolerance=drt)
+        col2 = self.__are_equal(h_plus_sim, be, dark_ratio_tolerance=drt)
+
+        # Looking for potential answer.
+        if row1 and row2 and col1 and col2:
+            for i in range(len(self.images_answers)):
+                ans = self.images_answers[i]
+
+                gh = self.__add_images(g, h)
+                cf = self.__add_images(c, f)
+
+                gh_sim = ImageChops.logical_or(g, h)
+                cf_sim = ImageChops.logical_or(c, f)
+
+                ans_plus_sim1 = self.__add_images(ans, gh_sim)
+                ans_plus_sim2 = self.__add_images(ans, cf_sim)
+
+                row3 = self.__are_equal(ans_plus_sim1, gh, dark_ratio_tolerance=drt)
+                col3 = self.__are_equal(ans_plus_sim2, cf, dark_ratio_tolerance=drt)
+
+                if row3 and col3:
+                    self.answer = i + 1
+                    return True
+
+        return False
+
+    # Checks if the similarities between the first two images in the row/columns is the third image.
+    # Helps with the following problems:
+    # E-10
+    # E-11
+    # Rating = 1
+    def __similarity_retention(self):
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        # Checking similarity in the first two rows.
+        ab_sim = ImageChops.logical_or(a, b)
+        de_sim = ImageChops.logical_or(d, e)
+
+        row1 = self.__are_equal(ab_sim, c)
+        row2 = self.__are_equal(de_sim, f)
+
+        # Check similarity in the first two columns.
+        ad_sim = ImageChops.logical_or(a, d)
+        be_sim = ImageChops.logical_or(b, e)
+
+        col1 = self.__are_equal(ad_sim, g)
+        col2 = self.__are_equal(be_sim, h)
+
+        # Looking for potential answer.
+        if row1 and row2 and col1 and col2:
+            for i in range(len(self.images_answers)):
+                ans = self.images_answers[i]
+
+                gh_sim = ImageChops.logical_or(g, h)
+                cf_sim = ImageChops.logical_or(c, f)
+
+                row3 = self.__are_equal(gh_sim, ans)
+                col3 = self.__are_equal(cf_sim, ans)
+
+                if row3 and col3:
+                    self.answer = i + 1
+                    return True
+
+        return False
+
+    def __halves_addition(self):
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        # Checking first two row.
+        a_top = self.__remove_bottom(a)
+        b_bot = self.__remove_top(b)
+        c_top = self.__remove_bottom(c)
+        c_bot = self.__remove_top(c)
+
+        d_top = self.__remove_bottom(d)
+        e_bot = self.__remove_top(e)
+        f_top = self.__remove_bottom(f)
+        f_bot = self.__remove_top(f)
+
+        row1 = self.__are_equal(a_top, c_top) and self.__are_equal(b_bot, c_bot)
+        row2 = self.__are_equal(d_top, f_top) and self.__are_equal(e_bot, f_bot)
+
+        # Checking first two columns.
+        a_top = self.__remove_bottom(a)
+        d_bot = self.__remove_top(d)
+        g_top = self.__remove_bottom(g)
+        g_bot = self.__remove_top(g)
+
+        b_top = self.__remove_bottom(b)
+        e_bot = self.__remove_top(e)
+        h_top = self.__remove_bottom(h)
+        h_bot = self.__remove_top(h)
+
+        col1 = self.__are_equal(a_top, g_top) and self.__are_equal(d_bot, g_bot)
+        col2 = self.__are_equal(b_top, h_top) and self.__are_equal(e_bot, h_bot)
+
+        # Looking for potential answer.
+        if row1 and row2 and col1 and col2:
+            for i in range(len(self.images_answers)):
+                ans = self.images_answers[i]
+
+                # Analysis of third row.
+                g_top = self.__remove_bottom(g)
+                h_bot = self.__remove_top(h)
+                i_top = self.__remove_bottom(ans)
+                i_bot = self.__remove_top(ans)
+
+                # Analysis of third columns.
+                c_top = self.__remove_bottom(c)
+                f_bot = self.__remove_top(f)
+
+                row3 = self.__are_equal(g_top, i_top) and self.__are_equal(h_bot, i_bot)
+                col3 = self.__are_equal(c_top, i_top) and self.__are_equal(f_bot, i_bot)
+
+                if row3 and col3:
+                    self.answer = i + 1
+                    return True
+
+        return False
+
     # ---------------------------------------------------------------------------------------------------------------- #
     # Functions that Compare Images
     # ---------------------------------------------------------------------------------------------------------------- #
 
     # Checks if images are the same.
-    def __are_equal(self, image1: Image, image2: Image, show=None) -> bool:
+    def __are_equal(self, image1: Image, image2: Image, show=None, dark_ratio_tolerance=None) -> bool:
         difference = ImageChops.difference(image1, image2)
 
         # Dark and white pixels of the first and second image.
@@ -390,10 +643,17 @@ class VisualSolver:
             print("\tEquality: " + str(sameness))
             print("\tDark Ratio: " + str(dark_ratio))
             print("\tDark 1: " + str(dark1))
-            print("\tDark 1: " + str(dark2), end="\n\n")
+            print("\tDark 2: " + str(dark2), end="\n\n")
+
+        if dark_ratio_tolerance is None:
+            dl = 0.95
+            du = 1.05
+        else:
+            dl = dark_ratio_tolerance[0]
+            du = dark_ratio_tolerance[1]
 
         # Equality will be defined if these two metrics are passed.
-        if sameness > 0.95 and 0.95 < dark_ratio < 1.05:
+        if sameness > 0.95 and dl < dark_ratio < du:
             return True
         else:
             return False
@@ -523,6 +783,52 @@ class VisualSolver:
         # Change black center pixels to white.
         for i in range(w - off, w + off):
             for j in range(h - off, h + off):
+                if pixels[i, j] == 0:
+                    pixels[i, j] = 255
+
+        return copy
+
+    def __remove_bottom(self, image: Image) -> Image:
+
+        # Makes a copy of the image to prevent changes to the original.
+        copy = image.copy()
+
+        # Map of all pixels.
+        pixels = copy.load()
+
+        # With and height.
+        w = int(copy.size[0])
+        h = int(copy.size[1])
+
+        # Center off-set.
+        off = 38
+
+        # Change black center pixels to white.
+        for i in range(0, w):
+            for j in range(int(h/2), h):
+                if pixels[i, j] == 0:
+                    pixels[i, j] = 255
+
+        return copy
+
+    def __remove_top(self, image: Image) -> Image:
+
+        # Makes a copy of the image to prevent changes to the original.
+        copy = image.copy()
+
+        # Map of all pixels.
+        pixels = copy.load()
+
+        # With and height.
+        w = int(copy.size[0])
+        h = int(copy.size[1])
+
+        # Center off-set.
+        off = 38
+
+        # Change black center pixels to white.
+        for i in range(0, w):
+            for j in range(0, int(h/2)):
                 if pixels[i, j] == 0:
                     pixels[i, j] = 255
 
