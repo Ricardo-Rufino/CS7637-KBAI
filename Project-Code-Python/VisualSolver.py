@@ -36,7 +36,6 @@ class VisualSolver:
 
         if self.debug:
             print("\nAnalysis of " + problem.name + "--------------------", end='\n\n')
-            print("Figures: ")
 
         # Collecting RavenFigure and RavenObject objects for all figures in the problem set.
         for i in self.figure_keys:
@@ -49,18 +48,6 @@ class VisualSolver:
 
             self.images_problem.append(image)
 
-            if self.debug:
-                print(image_path)
-                # print(image.size, image.width, image.height)
-                # print(image.mode)
-                # print(image.histogram())
-                # print(type(image))
-
-                # image.show()
-
-        if self.debug:
-            print("\nPotential answers: ")
-
         # Collection images from the potential answers.
         for i in self.answer_keys:
 
@@ -72,16 +59,16 @@ class VisualSolver:
 
             self.images_answers.append(image)
 
-            if self.debug:
-                print(image_path)
-                # print(image.size, image.width, image.height)
-                # print(image.mode)
-                # image.show()
-
         tuple(self.images_problem)
         tuple(self.images_answers)
 
+        if self.debug:
+            print("All figure loaded properly, analysis will now star...")
+
         self.get_answer()
+
+        if self.debug:
+            print("\nAnalysis has concluded.---------------------------", end="\n\n")
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # Main Solver Function
@@ -95,32 +82,31 @@ class VisualSolver:
         #         image1 = self.__remove_top(i)
         #         image1.show()
 
-
         # Special cases.------------------------------------------------------------------------------------------------
 
         # Checks if horizontal figures are the same.
         if self.__horizontal_addition():
             print("Used function: same_horizontal")
             return
-        #
-        # # Checks if diagonals are the same.
-        # if self.__same_diagonal():
-        #     print("Used function: same_diagonal")
-        #     return
-        #
-        # # Check if same difference is found in rows and columns.
-        # if self.__same_inner_outer():
-        #     print("Used function: same_inner_outer")
-        #     return
-        #
-        # if self.__same_horizontal_outer():
-        #     print("Used function: same_horizontal_outer")
-        #     return
-        #
-        # if self.__sameness_comparator():
-        #     print("Used function: sameness_comparator")
-        #     return
-        #
+
+        # Checks if diagonals are the same.
+        if self.__same_diagonal():
+            print("Used function: same_diagonal")
+            return
+
+        # Check if same difference is found in rows and columns.
+        if self.__same_inner_outer():
+            print("Used function: same_inner_outer")
+            return
+
+        if self.__same_horizontal_outer():
+            print("Used function: same_horizontal_outer")
+            return
+
+        if self.__sameness_comparator():
+            print("Used function: sameness_comparator")
+            return
+
         if self.__guess_by_uniqueness():
             print("Used function: guess_by_uniqueness")
             return
@@ -147,44 +133,8 @@ class VisualSolver:
 
         # --------------------------------------------------------------------------------------------------------------
 
-        # # Dictionary that contains the differences of all potential answers.
-        # diff = {}
-        #
-        # # Known transformation from the first row and column of the RPM.
-        # hor_tr1 = self.__row_col_transformation(a, b, c)
-        # ver_tr1 = self.__row_col_transformation(a, d, g)
-        #
-        # if self.debug:
-        #     print("\nHorizontal and Vertical Lists: ")
-        #     self.__print_transformation_list(hor_tr1, ver_tr1)
-        #
-        # # Iterating through all the potential answers to find similar horizontal and vertical transformations.
-        # for i in range(0, len(self.images_answers)):
-        #     ans = self.images_answers[i]
-        #     hor_tr2 = self.__row_col_transformation(g, h, ans)
-        #     ver_tr2 = self.__row_col_transformation(c, f, ans)
-        #
-        #     # Differences between known and potential answers.
-        #     hor_diff = self.__transformation_difference(hor_tr1, hor_tr2)
-        #     ver_diff = self.__transformation_difference(ver_tr1, ver_tr2)
-        #
-        #     if self.debug:
-        #         print("\nAnswer " + str(i+1))
-        #         self.__print_transformation_list(hor_tr2, ver_tr2)
-        #
-        #     if hor_diff == 0 and ver_diff == 0:
-        #         self.answer = i+1
-        #         return
-        #     else:
-        #         difference = hor_diff + ver_diff
-        #         diff[difference] = i+1
-        #
-        # sorted_answers = list(diff.keys())
-        # sorted_answers.sort()
-        # self.answer = diff[sorted_answers[0]]
-
     # ---------------------------------------------------------------------------------------------------------------- #
-    # Specific Case Functions
+    # Specific Case Functions for Problem Set D
     # ---------------------------------------------------------------------------------------------------------------- #
 
     # Function that checks if the horizontal images are the same.
@@ -314,24 +264,38 @@ class VisualSolver:
 
     # This function checks if the sameness across rows rows and columns is the same; and that columns contain unique
     # inner images.
+    # Helps with the following problems:
+    # D-05
+    # E-11
     def __sameness_comparator(self):
         (a, b, c, d, e, f, g, h) = self.images_problem
 
-        # Comparing sameness of first row.
-        ab = ImageChops.logical_or(a, b)
-        bc = ImageChops.logical_or(b, c)
-        same_first_row = self.__are_equal(ab, bc)
+        # Comparing sameness of first two rows.
+        ab_sim = ImageChops.logical_or(a, b)
+        bc_sim = ImageChops.logical_or(b, c)
+
+        de_sim = ImageChops.logical_or(d, e)
+        ef_sim = ImageChops.logical_or(e, f)
+
+        row1 = self.__are_equal(ab_sim, bc_sim)
+        row2 = self.__are_equal(de_sim, ef_sim)
 
         # Comparing sameness of first column.
-        ad = ImageChops.logical_or(a, d)
-        dg = ImageChops.logical_or(d, g)
-        same_first_col = self.__are_equal(ad, dg)
+        ad_sim = ImageChops.logical_or(a, d)
+        dg_sim = ImageChops.logical_or(d, g)
+
+        be_sim = ImageChops.logical_or(b, e)
+        eh_sim = ImageChops.logical_or(e, h)
+
+        col1 = self.__are_equal(ad_sim, dg_sim)
+        col2 = self.__are_equal(be_sim, eh_sim)
 
         # Checking for unique inner shapes in each column.
         unique_first_col = self.__unique_inner(a, d, g)
+        unique_second_col = self.__unique_inner(b, e, h)
 
         # Check for solution.
-        if same_first_row and same_first_col and unique_first_col:
+        if row1 and col1 and unique_first_col:
             gh = ImageChops.logical_or(g, h)  # Sameness of partial third row.
             cf = ImageChops.logical_or(c, f)  # Sameness of partial third column.
             for i in range(len(self.images_answers)):
@@ -380,6 +344,10 @@ class VisualSolver:
                 return True
 
         return False
+
+    # ---------------------------------------------------------------------------------------------------------------- #
+    # Specific Case Functions for Problem Set E
+    # ---------------------------------------------------------------------------------------------------------------- #
 
     # Function that checks if right-left and bottom-up addition is present.
     # Helps with the following problems:
@@ -669,7 +637,7 @@ class VisualSolver:
 
         return False
 
-    # Chekcs if the outer section of the image is the same.
+    # Checks if the outer section of the image is the same.
     def __same_outer(self, image1: Image, image2: Image, show=None) -> bool:
         crop1 = self.__remove_center(image1)
         crop2 = self.__remove_center(image2)
@@ -678,72 +646,6 @@ class VisualSolver:
             return True
 
         return False
-
-    # ---------------------------------------------------------------------------------------------------------------- #
-    # Transformation Functions
-    # ---------------------------------------------------------------------------------------------------------------- #
-
-    def __row_col_transformation(self, image1: Image, image2: Image, image3: Image) -> list:
-        transformation = []
-
-        transformation.append(self.__image_transformation(image1, image2))
-        transformation.append(self.__image_transformation(image2, image3))
-
-        return transformation
-
-    def __image_transformation(self, image1: Image, image2: Image) -> np.array:
-        transformation = np.zeros((6, 1))
-
-        # Difference in pixel count.-----------------------------------------
-        dark1, white1 = self.__pixel_count(image1)
-        dark2, white2 = self.__pixel_count(image2)
-
-        # if self.debug:
-        #     print("Dark 1: " + str(dark1))
-        #     print("Dark 2: " + str(dark2))
-
-        # Identifies if a change in image has occurred.
-        if dark1 != dark2:
-            transformation[0] = 1
-        # Identifies if figure is increasing/decreasing.
-        if dark2 > 1.2 * dark1 or dark2 < 0.8 * dark1:
-            transformation[1] = 1
-
-        return transformation
-
-    def __image_comparator(self, image1: Image, image2: Image) -> list:
-        transformation = []
-
-        transformation.append(ImageChops.difference(image1, image2))  # Differences
-        transformation.append(ImageChops.logical_or(image1, image2))  # Similarities
-
-        return transformation
-
-    def __transformation_difference(self, transformation1: list, transformation2: list) -> int:
-        counter = 0
-
-        for i in range(0, len(transformation1)):
-            array1 = transformation1[i]
-            array2 = transformation2[i]
-
-            for k in range(0, len(array1)):
-                el1 = array1[k]
-                el2 = array2[k]
-
-                if el1 != el2:
-                    counter += float(np.abs(el1) + np.abs(el2))
-
-        return counter
-
-    def __print_transformation_list(self, tr1: list, tr2: list) -> None:
-        array1 = tr1[0]
-        array2 = tr1[1]
-        array3 = tr2[0]
-        array4 = tr2[1]
-
-        for i in range(0, len(array1)):
-            print("\t '{0}'  '{1}' \t|\t '{2}'  '{3}'".format(array1[i], array2[i], array3[i], array4[i], align='^',
-                                                              width='10'))
 
     # ---------------------------------------------------------------------------------------------------------------- #
     # Helper Functions
@@ -755,6 +657,12 @@ class VisualSolver:
             return image1
         else:
             return ImageChops.logical_and(image1, image2)
+
+    def __add_three_images(self, image1: Image, image2: Image, image3: Image) -> Image:
+        first_addition = self.__add_images(image1, image2)
+        second_addition = self.__add_images(first_addition, image3)
+
+        return second_addition
 
     # Returns the number of white and dark pixels in the image.
     def __pixel_count(self, image: Image) -> tuple:
