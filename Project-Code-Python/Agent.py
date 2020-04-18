@@ -61,11 +61,14 @@ class Agent:
             3: 1.0,
             4: 2/3,
             5: 9/14,
-            6: 1,
-            7: 1,
-            8: 1,
-            9: 1,
-            10: 1,
+            6: 0.75,
+            7: 0.9,
+            8: 0.8,
+            9: 1.0,
+            10: 1.0,
+            11: 1.0,
+            12: 1.0,
+            13: 1.0,
         }
 
     # The primary method for solving incoming Raven's Progressive Matrices.

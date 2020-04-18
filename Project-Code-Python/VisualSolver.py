@@ -5,9 +5,9 @@ from PIL import Image, ImageChops, ImageOps
 
 class VisualSolver:
     problem_num = 0  # Problem number.
-    problem_inv = 2  # Problem to investigate.
+    problem_inv = 9  # Problem to investigate.
 
-    report = np.zeros((11, 24), dtype=int)
+    report = np.zeros((14, 24), dtype=int)
 
     def __init__(self, problem, correctness: dict):
         VisualSolver.problem_num += 1
@@ -86,6 +86,15 @@ class VisualSolver:
     def get_answer(self) -> None:
         (a, b, c, d, e, f, g, h) = self.images_problem
 
+        if self.debug:
+            ans = self.images_answers[7]
+
+            diff1 = self.__percent_pixel_difference(ans, b)
+            diff2 = self.__percent_pixel_difference(ans, d)
+            print(diff1)
+            print(diff2)
+            print(round(diff2/diff1))
+
         # List of all functions.
         func_list = [self.__horizontal_addition,
                      self.__same_diagonal,
@@ -93,6 +102,9 @@ class VisualSolver:
                      self.__same_horizontal_outer,
                      self.__sameness_comparator,
                      self.__guess_by_uniqueness,
+                     self.__problem_d8,
+                     self.__problem_d9,
+                     self.__problem_d12,
                      self.__reverse_addition,
                      self.__edge_addition,
                      self.__similarity_addition,
@@ -128,6 +140,9 @@ class VisualSolver:
                         confidence = candidate[1]
 
             self.answer = correct_ans
+
+        # if VisualSolver.problem_num == 24:
+        #     self.__print_report()
 
         # if self.debug:
         #     self.__print_report()
@@ -345,6 +360,119 @@ class VisualSolver:
                 counter += 1
 
             if counter == len(ans):
+                self.answer = i + 1
+                return True
+
+        return False
+
+    # Function created to solve problem D-08. Checks if fill type is shifting one unit to the right.
+    def __problem_d8(self):
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        # Checking that right-shift fill type is present.
+        a_change = self.__color_change(a)
+        e_change = self.__color_change(e)
+
+        b_change = self.__color_change(b)
+        f_change = self.__color_change(f)
+        g_change = self.__color_change(g)
+
+        c_change = self.__color_change(c)
+        d_change = self.__color_change(d)
+        h_change = self.__color_change(h)
+
+        ae_same_fill = a_change == e_change
+        bfg_same_fill = b_change == f_change == g_change
+        cdh_same_fill = c_change == d_change == h_change
+
+        fill_right_shift = ae_same_fill and bfg_same_fill and cdh_same_fill
+
+        # Checking that each shifting fill type is a different shape.
+        ae_same = self.__are_equal(a, e)
+        bfg_unique = self.__unique_images([b, f, g])
+        cdh_unique = self.__unique_images([c, d, h])
+
+        unique_right_shift = not ae_same and bfg_unique and cdh_unique
+
+        if fill_right_shift and unique_right_shift:
+            for i in range(len(self.images_answers)):
+                ans = self.images_answers[i]
+                i_change = self.__color_change(ans)
+
+                aei_change = a_change == e_change == i_change
+                aei_unique = self.__unique_images([a, e, ans])
+
+                if aei_change and aei_unique:
+                    self.answer = i + 1
+                    return True
+
+        return False
+
+    # Function designed to solve problem D-09. Checks that similarities are shifted to the right by one. Also checks
+    # that images with equal similarities are unique.
+    def __problem_d9(self):
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        # How many pixels to crop from the figures border.
+        border = 40
+
+        # Checking that similarities are shifted to the right by one unit.
+        ae_sim = self.__remove_border(ImageChops.logical_or(a, e), border=border)
+
+        bf_sim = self.__remove_border(ImageChops.logical_or(b, f), border=border)
+        fg_sim = self.__remove_border(ImageChops.logical_or(f, g), border=border)
+        second_sim = self.__are_equal(bf_sim, fg_sim)
+
+        cd_sim = self.__remove_border(ImageChops.logical_or(c, d), border=border)
+        dh_sim = self.__remove_border(ImageChops.logical_or(d, h), border=border)
+        third_sim = self.__are_equal(cd_sim, dh_sim)
+
+        # Checking for uniqueness among images that contain similarities.
+        bfg_unique = self.__unique_images([b, f, g])
+        cdh_unique = self.__unique_images([c, d, h])
+
+        # Looking for potential answer.
+        if second_sim and third_sim and bfg_unique and cdh_unique:
+            for i in range(len(self.images_answers)):
+                ans = self.images_answers[i]
+
+                ei_sim = self.__remove_border(ImageChops.logical_or(e, ans), border=border)
+
+                first_sim = self.__are_equal(ae_sim, ei_sim)
+                aei_unique = self.__unique_images([a, e, ans])
+
+                if first_sim and aei_unique:
+                    self.answer = i + 1
+                    return True
+
+        return False
+
+    # Function created to solver problem D-12. Checks that figure incrementation occurs in as the figures shift 2 units
+    # to the right.
+    def __problem_d12(self):
+        (a, b, c, d, e, f, g, h) = self.images_problem
+
+        # Checks that images are incrementing by one.
+        af_increment = self.__percent_pixel_difference(a, f)
+        eg_increment = self.__percent_pixel_difference(e, g)
+
+        if not self.__similar_change(af_increment, eg_increment):
+            return False
+
+        # Checks that images are incrementing by two.
+        ah_increment = self.__percent_pixel_difference(a, h)
+        ec_increment = self.__percent_pixel_difference(e, c)
+
+        if not self.__similar_change(ah_increment, ec_increment):
+            return False
+
+        for i in range(len(self.images_answers)):
+            ans = self.images_answers[i]
+
+            ib_increment = self.__percent_pixel_difference(ans, b)
+            id_increment = self.__percent_pixel_difference(ans, d)
+
+            if self.__similar_change(ib_increment, af_increment) and self.__similar_change(id_increment, ah_increment):
                 self.answer = i + 1
                 return True
 
@@ -748,10 +876,87 @@ class VisualSolver:
         return copy
 
     # Returns an image with a whitened border.
-    def __remove_border(self, image: Image) -> Image:
-        crop = ImageOps.crop(image, border=55)
+    def __remove_border(self, image: Image, border=None) -> Image:
+        if border is None:
+            border = 55
+
+        crop = ImageOps.crop(image, border=border)
 
         return crop
+
+    # Returns true if inner images are the same between the images.
+    def __equal_inner(self, image1: Image, image2: Image) -> bool:
+        in1 = self.__remove_border(image1)
+        in2 = self.__remove_border(image2)
+
+        return self.__are_equal(in1, in2)
+
+    # Returns true if the outer images are the same between the images.
+    def __equal_outer(self, image1: Image, image2: Image, image3=None) -> bool:
+        out1 = self.__remove_center(image1)
+        out2 = self.__remove_center(image2)
+
+        if image3 is not None:
+            out3 = self.__remove_center(image3)
+            return self.__are_equal(out1, out2) and self.__are_equal(out2, out3)
+        else:
+            return self.__are_equal(out1, out2)
+
+    # Returns true if the figure is completely filled.
+    def __is_filled(self, image: Image) -> bool:
+        # Number of times white and black alternate.
+        alternate = self.__color_change(image)
+
+        if alternate == 2:
+            return True
+
+        return False
+
+    # Return true if the figure is completely unfilled.
+    def __is_unfilled(self, image: Image) -> bool:
+        # Number of times white and black alternate.
+        alternate = self.__color_change(image)
+
+        if alternate == 4:
+            return True
+
+        return False
+
+    # Returns true if the figure is partially filled.
+    def __is_partially_filled(self, image: Image) -> bool:
+        # Number of times white and black alternate.
+        alternate = self.__color_change(image)
+
+        if alternate == 6:
+            return True
+
+        return False
+
+    def __color_change(self, image: Image) -> int:
+        # Map of all pixels.
+        pixels = image.load()
+
+        # With and height.
+        w = int(image.size[0])
+        h = int(image.size[1])
+
+        # Look through the middle of the image and check changes in color.
+        i = int(h / 2)              # Middle of the figure (waist).
+        color_change = 0            # Counter that checks the amount of color changes.
+        for j in range(1, w):
+            if pixels[i, j] != pixels[i, j - 1]:
+                color_change += 1
+
+        return color_change
+
+    def _plane_exists(self, pixels, col, height) -> bool:
+        for row in range(0, height):
+            left = pixels[row, col-1]
+            right = pixels[row, col+10]
+            if pixels[row, col] == pixels[row, col - 1]:
+                return False
+
+        return True
 
     # Checks if the images in the list are all unique.
     def __unique_images(self, images: list) -> bool:
@@ -763,6 +968,21 @@ class VisualSolver:
             return True
 
         return False
+
+    def __percent_pixel_difference(self, image1: Image, image2: Image) -> float:
+        dark1, white1 = self.__pixel_count(image1)
+        dark2, white2 = self.__pixel_count(image2)
+
+        if dark1 == 0 and dark2 == 0:
+            return 0
+
+        if dark1 == 0:
+            return 99999999
+        else:
+            return dark2/dark1 - 1
+
+    def __similar_change(self, num1, num2):
+        return np.abs(num2-num1) < 0.07
 
     # Checks if images have the same inner image.
     def __unique_inner(self, image1: Image, image2: Image, image3: Image):
@@ -787,9 +1007,11 @@ class VisualSolver:
     # Prints the performance report of VisualSolver.
     def __print_report(self):
         row, col = VisualSolver.report.shape
-
+        print("Performance Report:")
         for i in range(row):
             for j in range(col):
+                if j == 0:
+                    print("Solver {0}|".format(str(i+1)), end="\t")
                 if j == 12:
                     print("|", end= "\t")
                 print(str(VisualSolver.report[i, j]), end="\t\t")
